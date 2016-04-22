@@ -5,11 +5,7 @@ import Phaser from 'phaser'
 import BootState from './states/Boot'
 import SplashState from './states/Splash'
 import GameState from './states/Game'
-
-import socketCluster from 'socketcluster-client';
-const socketOptions = {
-    port: 8000
-};
+import Mushroom from './sprites/Mushroom';
 
 class Game extends Phaser.Game {
 
@@ -24,16 +20,6 @@ class Game extends Phaser.Game {
     this.state.add('Game', GameState, false);
 
     this.state.start('Boot');
-
-    // not sure if storing socket in game state makes actual sense
-    let socket = socketCluster.connect(socketOptions);
-    socket.on('connect', () => {
-        console.log('CONNECTED');
-    });
-    socket.on('rand', (num) => {
-        console.log('RANDOM', num);
-    });
-    this.state.add('Socket', socket);
   }
 }
 

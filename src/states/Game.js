@@ -1,34 +1,87 @@
 /* globals __DEV__ */
-import Phaser from 'phaser'
-import Mushroom from '../sprites/Mushroom'
-import {setResponsiveWidth} from '../utils'
+import Phaser from 'phaser';
+import Mushroom from '../sprites/Mushroom';
+import socketCluster from 'socketcluster-client';
+const socketOptions = {
+    port: 8000
+};
 
 export default class extends Phaser.State {
   init () {}
   preload () {}
 
   create () {
-    let banner = this.add.text(this.game.world.centerX, this.game.height - 30, 'Phaser + ES6 + Webpack')
-    banner.font = 'Nunito'
-    banner.fontSize = 40
-    banner.fill = '#77BFA3'
-    banner.anchor.setTo(0.5)
+    this.game.stage.disableVisibilityChange = true;
 
-    this.mushroom = new Mushroom({
-      game: this.game,
-      x: this.game.world.centerX,
-      y: this.game.world.centerY,
-      asset: 'mushroom'
-    })
+    // not sure if storing socket in game state makes actual sense
+    this.socket = socketCluster.connect(socketOptions);
+    this.socket.on('connect', () => {
+        console.log('CONNECTED');
+    });
 
-    // set the sprite width to 30% of the game width
-    setResponsiveWidth(this.mushroom, 30, this.game.world)
-    this.game.add.existing(this.mushroom)
+
+    const gameChannel = this.socket.subscribe('GAME');
+
+
+    this.socket.on('GAME', packet => { this.handlePacket(packet); });
+    gameChannel.watch(packet => { this.handlePacket(packet); });
+
+    this.state.add('Socket', this.socket);
+
+    this.input.keyboard.onDownCallback = event => {
+      const pos = this.input.position;
+      this.socket.emit('GAME', {
+        type: 'ENTITY_CREATE_REQUEST',
+        data: {
+          pos: {x: pos.x, y: pos.y},
+          imgHash: 'kakaka'
+        }
+      });
+    };
   }
 
-  render () {
-    if (__DEV__) {
-      this.game.debug.spriteInfo(this.mushroom, 32, 32)
+  render () {}
+
+  handlePacket(packet) {
+    console.log('GOT PACKET', packet);
+    switch (packet.type) {
+        case 'ENTITY_CREATE':
+          packet.data.forEach(entity => {
+            this.handleEntityCreate(entity);
+          });
+        break;
+        case 'ENTITY_DELETE':
+        const id = packet.data.id;
+        const sprite = this.entities[id];
+        if (sprite) {
+          sprite.destroy();
+          delete this.entities[id];
+        }
+        break;
     }
+  }
+
+  handleEntityCreate(entity) {
+    let mushroom = new Mushroom({
+      game: this.state.game,
+      x: entity.pos.x,
+      y: entity.pos.y,
+      asset: 'mushroom'
+    });
+    mushroom._id = entity.id;
+
+    mushroom.inputEnabled = true;
+    mushroom.events.onInputDown.add((entity) => {
+      const id = entity._id;
+      this.socket.emit('GAME', {
+        type: 'ENTITY_DELETE_REQUEST',
+        data: {id}
+      });
+
+    }, this);
+
+    if (!this.entities) { this.entities = {} }
+    this.entities = Object.assign(this.entities, {[entity.id]: mushroom});
+    this.state.game.add.existing(mushroom);
   }
 }
