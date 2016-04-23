@@ -24,14 +24,15 @@ export default class extends Phaser.State {
     this.socket = socketCluster.connect(socketOptions);
     this.socket.on('connect', () => {
         console.log('CONNECTED');
+        const gameChannel = this.socket.subscribe(channels.GAME);
+        gameChannel.watch(packet => { this.handlePacket(packet); });
+        
+        this.socket.emit(channels.GAME, {
+          type: types.HANDSHAKE
+        });
     });
 
-
-    const gameChannel = this.socket.subscribe(channels.GAME);
-
-
     this.socket.on(channels.GAME, packet => { this.handlePacket(packet); });
-    gameChannel.watch(packet => { this.handlePacket(packet); });
 
     this.state.add('Socket', this.socket);
 
@@ -42,7 +43,17 @@ export default class extends Phaser.State {
           type: types.ENTITY_CREATE_REQUEST,
           data: {
             pos: {x: pos.x, y: pos.y},
-            imgHash: document.getElementById('imageHash').value
+            imgHash: document.getElementById('imageHash').value,
+            selectedClientId: null
+          }
+        });
+      } else if (event.keyCode === 46) {
+        Object.keys(this.entities).forEach(key => {
+          if (this.entities[key].entity.selectedClientId === this.socket.id) {
+            this.socket.emit(channels.GAME, {
+              type: types.ENTITY_DELETE_REQUEST,
+              data: {id: this.entities[key].entity.id}
+            });
           }
         });
       }
@@ -60,30 +71,35 @@ export default class extends Phaser.State {
           packet.data.forEach(entity => {
             this.handleEntityCreate(entity);
           });
-        break;
+          break;
         case types.ENTITY_DELETE:
-        const id = packet.data.id;
-        const sprite = this.entities[id];
-        if (sprite) {
-          sprite.destroy();
-          delete this.entities[id];
-        }
-        break;
+          const id = packet.data.id;
+          const sprite = this.entities[id];
+          if (sprite) {
+            sprite.destroy();
+            delete this.entities[id];
+          }
+          break;
+        case types.ENTITY_SELECT:
+          const entities = packet.data;
+          entities.forEach(entity => {
+            this.entities[entity.id].updateEntity(entity);
+          });
+          break;
     }
   }
 
   handleEntityCreate(entity) {
-
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
-      socket: this.socket
+      socketClientId: this.socket.id
     });
 
-    entitySprite.onDeleteRequest = entityId => {
+    entitySprite.onSelectRequest = entityId => {
       this.socket.emit(channels.GAME, {
-        type: types.ENTITY_DELETE_REQUEST,
-        data: {id: entityId}
+        type: types.ENTITY_SELECT_REQUEST,
+        data: [entityId]
       });
     };
 
