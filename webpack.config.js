@@ -34,7 +34,11 @@ module.exports = {
       port: process.env.PORT || 3000,
       open: false,
       server: {
-        baseDir: ['./', './build']
+        baseDir: ['./', './build'],
+        middleware: function (req, res, next) {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          next();
+        }
       }
     })
   ],

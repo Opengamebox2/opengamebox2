@@ -9,7 +9,9 @@ const socketOptions = {
 
 export default class extends Phaser.State {
   init () {}
-  preload () {}
+  preload () {
+    this.load.crossOrigin = 'anonymous';
+  }
 
   create () {
     this.game.stage.disableVisibilityChange = true;
@@ -30,15 +32,19 @@ export default class extends Phaser.State {
     this.state.add('Socket', this.socket);
 
     this.input.keyboard.onDownCallback = event => {
-      const pos = this.input.position;
-      this.socket.emit(channels.GAME, {
-        type: types.ENTITY_CREATE_REQUEST,
-        data: {
-          pos: {x: pos.x, y: pos.y},
-          imgHash: 'kakaka'
-        }
-      });
+      if (event.keyCode === 32) {
+        const pos = this.input.position;
+        this.socket.emit(channels.GAME, {
+          type: types.ENTITY_CREATE_REQUEST,
+          data: {
+            pos: {x: pos.x, y: pos.y},
+            imgHash: document.getElementById('imageHash').value
+          }
+        });
+      }
     };
+
+    this.waitingSprites = {};
   }
 
   render () {}
@@ -63,16 +69,18 @@ export default class extends Phaser.State {
   }
 
   handleEntityCreate(entity) {
-    let mushroom = new Mushroom({
+    const loader = new Phaser.Loader(this);
+
+    let entitySprite = new Mushroom({
       game: this.state.game,
       x: entity.pos.x,
       y: entity.pos.y,
       asset: 'mushroom'
     });
-    mushroom._id = entity.id;
 
-    mushroom.inputEnabled = true;
-    mushroom.events.onInputDown.add((entity) => {
+    entitySprite._id = entity.id;
+    entitySprite.inputEnabled = true;
+    entitySprite.events.onInputDown.add((entity) => {
       const id = entity._id;
       this.socket.emit(channels.GAME, {
         type: types.ENTITY_DELETE_REQUEST,
@@ -81,8 +89,36 @@ export default class extends Phaser.State {
 
     }, this);
 
+    loader.onFileComplete.add((progress, cacheKey, success, totalLoaded, totalFiles) => {
+      if (this.waitingSprites[cacheKey]) {
+        console.log(`LOADED ${cacheKey} ${progress}`);
+        this.waitingSprites[cacheKey].forEach(sprite => {
+          sprite.loadTexture(cacheKey);
+        });
+        document.getElementById('imageHashes').innerHTML += cacheKey + '\n';
+        delete this.waitingSprites[cacheKey];
+      };
+    });
+
+    if (!this.cache.checkImageKey(entity.imgHash)) {
+      if (!this.waitingSprites[entity.imgHash]) {
+        loader.crossOrigin = 'anonymous';
+        console.log(`Loading ${entity.imgHash}`);
+        loader.image(entity.imgHash, `https://gateway.ipfs.io/ipfs/${entity.imgHash}`);
+
+        this.waitingSprites[entity.imgHash] = [entitySprite];
+        loader.start();
+      } else {
+        this.waitingSprites[entity.imgHash].push(entitySprite);
+      }
+    } else {
+      entitySprite.loadTexture(entity.imgHash);
+    }
+
+    
+
     if (!this.entities) { this.entities = {} }
-    this.entities = Object.assign(this.entities, {[entity.id]: mushroom});
-    this.state.game.add.existing(mushroom);
+    this.entities = Object.assign(this.entities, {[entity.id]: entitySprite});
+    this.state.game.add.existing(entitySprite);
   }
 }
