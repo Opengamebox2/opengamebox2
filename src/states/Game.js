@@ -1,14 +1,18 @@
 /* globals __DEV__ */
 import Phaser from 'phaser';
-import Mushroom from '../sprites/Mushroom';
+import EntitySprite from '../sprites/EntitySprite';
 import {types, channels} from '../../protocol/protocol';
+import AssetLoader from '../AssetLoader';
 import socketCluster from 'socketcluster-client';
 const socketOptions = {
     port: 8000
 };
 
 export default class extends Phaser.State {
-  init () {}
+  init () {
+    this.assetLoader = new AssetLoader(this.game);
+    this.entities = {};
+  }
   preload () {
     this.load.crossOrigin = 'anonymous';
   }
@@ -69,55 +73,22 @@ export default class extends Phaser.State {
   }
 
   handleEntityCreate(entity) {
-    const loader = new Phaser.Loader(this);
 
-    let entitySprite = new Mushroom({
+    let entitySprite = new EntitySprite({
+      entity,
       game: this.state.game,
-      x: entity.pos.x,
-      y: entity.pos.y,
-      asset: 'mushroom'
+      socket: this.socket
     });
 
-    entitySprite._id = entity.id;
-    entitySprite.inputEnabled = true;
-    entitySprite.events.onInputDown.add((entity) => {
-      const id = entity._id;
+    entitySprite.onDeleteRequest = entityId => {
       this.socket.emit(channels.GAME, {
         type: types.ENTITY_DELETE_REQUEST,
-        data: {id}
+        data: {id: entityId}
       });
+    };
 
-    }, this);
+    this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);
 
-    loader.onFileComplete.add((progress, cacheKey, success, totalLoaded, totalFiles) => {
-      if (this.waitingSprites[cacheKey]) {
-        console.log(`LOADED ${cacheKey} ${progress}`);
-        this.waitingSprites[cacheKey].forEach(sprite => {
-          sprite.loadTexture(cacheKey);
-        });
-        document.getElementById('imageHashes').innerHTML += cacheKey + '\n';
-        delete this.waitingSprites[cacheKey];
-      };
-    });
-
-    if (!this.cache.checkImageKey(entity.imgHash)) {
-      if (!this.waitingSprites[entity.imgHash]) {
-        loader.crossOrigin = 'anonymous';
-        console.log(`Loading ${entity.imgHash}`);
-        loader.image(entity.imgHash, `https://gateway.ipfs.io/ipfs/${entity.imgHash}`);
-
-        this.waitingSprites[entity.imgHash] = [entitySprite];
-        loader.start();
-      } else {
-        this.waitingSprites[entity.imgHash].push(entitySprite);
-      }
-    } else {
-      entitySprite.loadTexture(entity.imgHash);
-    }
-
-    
-
-    if (!this.entities) { this.entities = {} }
     this.entities = Object.assign(this.entities, {[entity.id]: entitySprite});
     this.state.game.add.existing(entitySprite);
   }
