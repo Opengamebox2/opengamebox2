@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "phaser": "^2.4.6",
-    "socketcluster-client": "^4.3.14"
+    "socket.io-client": "^1.4.5"
   }
 }
