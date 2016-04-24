@@ -5,7 +5,7 @@ import {types, channels} from '../../protocol/protocol';
 import AssetLoader from '../AssetLoader';
 import uuid from 'uuid';
 import io from 'socket.io-client';
-
+import {store} from '../ui/App.js';
 
 export default class extends Phaser.State {
   init () {
@@ -69,12 +69,14 @@ export default class extends Phaser.State {
     });
 
     this.socket.on(types.PLAYER_JOIN, players => {
+      store.dispatch({type: types.PLAYER_JOIN, data: players});
       players.forEach(player => {
         console.log(`Player '${player.id}' joined the game!`);
       });
     });
 
     this.socket.on(types.PLAYER_LEAVE, players => {
+      store.dispatch({type: types.PLAYER_LEAVE, data: players});
       players.forEach(player => {
         console.log(`Player '${player.id}' left the game!`);
       });
