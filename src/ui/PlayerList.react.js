@@ -2,7 +2,6 @@ import React from 'react';
 import {connect} from 'react-redux';
 
 const PlayerList = ({players}) => {
-	console.log(players);
 	return (
 		<div>
 			<h2>Players</h2>
