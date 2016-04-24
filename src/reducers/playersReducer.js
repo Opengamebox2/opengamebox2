@@ -1,5 +1,3 @@
-import { types } from '../../protocol/protocol';
-
 const assignToEmpty = (oldObject, newObject) => {
   return Object.assign({}, oldObject, newObject);
 };
@@ -7,7 +5,7 @@ const assignToEmpty = (oldObject, newObject) => {
 function playersReducer(state = {}, action) {
   Object.freeze(state);
   switch (action.type) {
-    case types.PLAYER_JOIN:
+    case 'PLAYER_JOIN':
     {
       let players = {};
       action.data.forEach(player => {
@@ -16,7 +14,8 @@ function playersReducer(state = {}, action) {
       });
       return assignToEmpty(state, players);
     }
-    case types.PLAYER_LEAVE:
+
+    case 'PLAYER_LEAVE':
     {
       let players = assignToEmpty(state, {});
       action.data.forEach(player => {
@@ -24,6 +23,7 @@ function playersReducer(state = {}, action) {
       });
       return players;
     }
+
     default:
       return state;
   }

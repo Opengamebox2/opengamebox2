@@ -1,25 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore, compose} from 'redux';
+import bootstrap from '../../assets/css/bootstrap.min.css';
 
 import PlayerList from './PlayerList.react';
 import StartDialog from './StartDialog.react';
-import rootReducer from './rootReducer';
 
-export const store = createStore(
-  rootReducer,
-  {},
-  compose(window.devToolsExtension ? window.devToolsExtension() : f => f)
-);
-
-ReactDOM.render(
-  <Provider store={store}>
-    <div>
-      <PlayerList />
-    </div>
-  </Provider>,
-  document.getElementById('app')
-);
-
-export default () => {};
+export default {
+  init: (store) => {
+    ReactDOM.render(
+      <Provider store={store.getReduxStore()}>
+        <div>
+          <PlayerList />
+          <StartDialog />
+        </div>
+      </Provider>,
+      document.getElementById('app')
+    );
+  },
+}

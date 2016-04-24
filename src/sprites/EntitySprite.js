@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Phaser from 'phaser'
-import {store} from '../ui/App.js'
 
 export default class extends Phaser.Sprite {
 
@@ -49,8 +48,7 @@ export default class extends Phaser.Sprite {
       this.onMoveRequest({id: entitySprite.entity.id, pos: {x, y}});
     }, this);
 
-    // TODO: Only update color when store->players changes
-    store.subscribe(() => { this.updateColor() });
+    this.game.store.on(['PLAYER_JOIN', 'PLAYER_LEAVE'], () => { this.updateColor() });
   }
 
   update() {}
@@ -83,7 +81,7 @@ export default class extends Phaser.Sprite {
 
   updateColor() {
     if (this.entity.selectedClientId !== null) {
-      const player = store.getState().players[this.entity.selectedClientId];
+      const player = this.game.store.getState().players[this.entity.selectedClientId];
       if (player) {
         this.tint = Phaser.Color.HSLtoRGB(player.hue, 1.0, 0.9).color;
       } else {

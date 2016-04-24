@@ -1,17 +1,25 @@
-/* globals __DEV__ */
+import _ from 'lodash';
 import Phaser from 'phaser';
-import EntitySprite from '../sprites/EntitySprite';
-import {types, channels} from '../../protocol/protocol';
 import AssetLoader from '../AssetLoader';
-import uuid from 'uuid';
-import io from 'socket.io-client';
-import {store} from '../ui/App.js';
+import EntitySprite from '../sprites/EntitySprite';
 
 export default class extends Phaser.State {
-  init () {
+  create () {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
+    this.clientId = null;
 
+    this.game.stage.disableVisibilityChange = true;
+    this.group = this.game.add.group();
+    this.load.crossOrigin = 'anonymous';
+
+    this.initListeners();
+    this.addInputCallbacks();
+
+    this.game.store.dispatch('CONNECT');
+  }
+
+  initListeners() {
     if (localStorage.player) {
       this.player = JSON.parse(localStorage.player);
     } else {
@@ -19,81 +27,34 @@ export default class extends Phaser.State {
       localStorage.player = JSON.stringify(this.player);
     }
 
-    this.clientId = null;
-  }
-  preload () {
-    this.load.crossOrigin = 'anonymous';
-  }
-
-  create () {
-    this.game.stage.disableVisibilityChange = true;
-
-    // not sure if storing socket in game state makes actual sense
-    this.socket = io(`http://${window.location.hostname}:8000`);
-    this.socket.on('connect', () => {
-      this.socket.emit(types.HANDSHAKE, {authToken: this.player.authToken});
-      console.log('CONNECTED');
+    this.game.store.on('CONNECTED', () => {
+      this.game.store.dispatch('HANDSHAKE', {authToken: this.player.authToken});
     });
 
-    this.initListeners();
-
-    this.state.add('Socket', this.socket);
-
-    this.input.keyboard.onDownCallback = event => {
-      if (event.keyCode === 32) {
-        const pos = this.input.position;
-        this.socket.emit(types.ENTITY_CREATE_REQUEST, 
-          [{
-            pos: {x: pos.x, y: pos.y},
-            imgHash: document.getElementById('imageHash').value,
-            selectedClientId: null
-          }]);
-      } else if (event.keyCode === 46) {
-        const selection = _(this.entities)
-                          .map(x => x.entity)
-                          .pickBy({selectedClientId: this.clientId})
-                          .values()
-                          .map(entity => { return {id: entity.id}; })
-                          .value();
-
-        if (selection.length > 0) {
-          this.socket.emit(types.ENTITY_DELETE_REQUEST, selection);
-        }
-      }
-    };
-
-    this.group = this.game.add.group();
-  }
-
-  render () {}
-
-  initListeners() {
-    this.socket.on(types.HANDSHAKE_REPLY, data => {
+    this.game.store.on('HANDSHAKE_REPLY', data => {
       this.clientId = data.id;
     });
 
-    this.socket.on(types.PLAYER_JOIN, players => {
-      store.dispatch({type: types.PLAYER_JOIN, data: players});
+    this.game.store.on('PLAYER_JOIN', players => {
       players.forEach(player => {
         console.log(`Player '${player.id}' joined the game!`);
       });
     });
 
-    this.socket.on(types.PLAYER_LEAVE, players => {
-      store.dispatch({type: types.PLAYER_LEAVE, data: players});
+    this.game.store.on('PLAYER_LEAVE', players => {
       players.forEach(player => {
         console.log(`Player '${player.id}' left the game!`);
       });
     });
 
-    this.socket.on(types.ENTITY_CREATE, entities => {
+    this.game.store.on('ENTITY_CREATE', entities => {
       entities.forEach(entity => {
         this.handleEntityCreate(entity);
       });
       this.group.sort();
     });
 
-    this.socket.on(types.ENTITY_DELETE, entities => {
+    this.game.store.on('ENTITY_DELETE', entities => {
       entities.forEach(entity => {
         const id = entity.id;
         const sprite = this.entities[id];
@@ -104,13 +65,43 @@ export default class extends Phaser.State {
       });
     });
 
-    this.socket.on(types.ENTITY_SELECT, entities => {
+    this.game.store.on('ENTITY_SELECT', entities => {
       this.updateEntities(entities);
     });
 
-    this.socket.on(types.ENTITY_MOVE, entities => {
+    this.game.store.on('ENTITY_MOVE', entities => {
       this.updateEntities(entities);
     });
+  }
+
+  addInputCallbacks() {
+    this.input.keyboard.onDownCallback = event => {
+      switch (event.keyCode) {
+      case 32: {
+        const pos = this.input.position;
+        this.game.store.dispatch('ENTITY_CREATE_REQUEST',
+          [{
+            pos: {x: pos.x, y: pos.y},
+            imgHash: document.getElementById('imageHash').value,
+            selectedClientId: null,
+          }]
+        );
+      } break
+
+      case 46: {
+        const selection = _(this.entities)
+                          .map(x => x.entity)
+                          .pickBy({selectedClientId: this.clientId})
+                          .values()
+                          .map(entity => { return {id: entity.id}; })
+                          .value();
+
+        if (selection.length > 0) {
+          this.game.store.dispatch('ENTITY_DELETE_REQUEST', selection);
+        }
+      } break;
+      }
+    }
   }
 
   updateEntities(entities) {
@@ -128,11 +119,11 @@ export default class extends Phaser.State {
     });
 
     entitySprite.onSelectRequest = entity => {
-      this.socket.emit(types.ENTITY_SELECT_REQUEST, [entity]);
+      this.game.store.dispatch('ENTITY_SELECT_REQUEST', [entity]);
     };
 
     entitySprite.onMoveRequest = entity => {
-      this.socket.emit(types.ENTITY_MOVE_REQUEST, [entity]);
+      this.game.store.dispatch('ENTITY_MOVE_REQUEST', [entity]);
     };
 
     this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);

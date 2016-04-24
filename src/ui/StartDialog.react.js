@@ -1,9 +1,14 @@
 import React from 'react';
+import _ from 'lodash';
 import {Modal, Button, FormControl, FormGroup, ControlLabel} from 'react-bootstrap';
 import {reduxForm} from 'redux-form';
 import {connect} from 'react-redux';
 
-let StartDialog = ({fields, setPlayerName}) => {
+let StartDialog = ({fields, setPlayerName, settings}) => {
+  if (_.has(settings, 'name')) {
+    return (<div></div>);
+  }
+
   const {name} = fields;
   return (
     <div className="static-modal">
@@ -46,7 +51,7 @@ StartDialog = reduxForm({
 
 const mapStateToProps = state => {
   return {
-
+    settings: state.settings,
   };
 };
 
@@ -54,7 +59,10 @@ const mapDispatchToProps = dispatch => {
   return {
     setPlayerName: name => {
       console.log(name);
-      // dispatch some action here
+      dispatch({
+        type: 'SETTINGS_UPDATE',
+        data: { name },
+      });
     }
   };
 };
