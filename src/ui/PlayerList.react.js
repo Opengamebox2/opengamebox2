@@ -7,7 +7,10 @@ const PlayerList = ({players}) => {
 			<h2>Players</h2>
 			{
 				players.map(player => {
-					return (<div key={`playerlist-${player.id}`}>{player.id}</div>);
+          const color = `hsl(${360.0 * player.hue}, 100%, 50%)`
+          return (<div style={{color: color}} key={`playerlist-${player.id}`}>
+                    {player.id}
+                  </div>);
 				})
 			}
 		</div>

@@ -12,6 +12,7 @@ function playersReducer(state = {}, action) {
       let players = {};
       action.data.forEach(player => {
         players[player.id] = player;
+        players[player.id].hue = (player.color * 0.381966 + 0.604878) % 1.0;
       });
       return assignToEmpty(state, players);
     }
