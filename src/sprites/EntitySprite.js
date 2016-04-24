@@ -75,6 +75,8 @@ export default class extends Phaser.Sprite {
     } else {
       this.input.disableDrag();
     }
+
+    this.z = this.entity.depth;
   }
 
 }

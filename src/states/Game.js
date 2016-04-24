@@ -58,7 +58,7 @@ export default class extends Phaser.State {
       }
     };
 
-    this.waitingSprites = {};
+    this.group = this.game.add.group();
   }
 
   render () {}
@@ -72,6 +72,7 @@ export default class extends Phaser.State {
       entityArr.forEach(entity => {
         this.handleEntityCreate(entity);
       });
+      this.group.sort();
     });
 
     this.socket.on(types.ENTITY_DELETE, entityArr => {
@@ -85,17 +86,20 @@ export default class extends Phaser.State {
       });
     });
 
-    this.socket.on(types.ENTITY_SELECT, entityArr => {
-      entityArr.forEach(entity => {
-        this.entities[entity.id].updateEntity(entity);
-      });
+    this.socket.on(types.ENTITY_SELECT, entities => {
+      this.updateEntities(entities);
     });
 
-    this.socket.on(types.ENTITY_MOVE, entityArr => {
-      entityArr.forEach(entity => {
-        this.entities[entity.id].updateEntity(entity);
-      });
+    this.socket.on(types.ENTITY_MOVE, entities => {
+      this.updateEntities(entities);
     });
+  }
+
+  updateEntities(entities) {
+    entities.forEach(entity => {
+      this.entities[entity.id].updateEntity(entity);
+    });
+    this.group.sort();
   }
 
   handleEntityCreate(entity) {
@@ -117,5 +121,6 @@ export default class extends Phaser.State {
 
     this.entities = Object.assign(this.entities, {[entity.id]: entitySprite});
     this.state.game.add.existing(entitySprite);
+    this.group.add(entitySprite);
   }
 }
