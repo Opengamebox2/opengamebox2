@@ -80,6 +80,12 @@ export default class extends Phaser.State {
         this.entities[entity.id].updateEntity(entity);
       });
     });
+
+    this.socket.on(types.ENTITY_MOVE, entityArr => {
+      entityArr.forEach(entity => {
+        this.entities[entity.id].updateEntity(entity);
+      });
+    });
   }
 
   handleEntityCreate(entity) {
@@ -89,8 +95,12 @@ export default class extends Phaser.State {
       socketClientId: this.socket.id
     });
 
-    entitySprite.onSelectRequest = entityId => {
-      this.socket.emit(types.ENTITY_SELECT_REQUEST, [{id: entityId}]);
+    entitySprite.onSelectRequest = entity => {
+      this.socket.emit(types.ENTITY_SELECT_REQUEST, [entity]);
+    };
+
+    entitySprite.onMoveRequest = entity => {
+      this.socket.emit(types.ENTITY_MOVE_REQUEST, [entity]);
     };
 
     this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);
