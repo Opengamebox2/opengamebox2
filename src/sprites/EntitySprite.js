@@ -56,7 +56,7 @@ export default class extends Phaser.Sprite {
   update() {}
 
   updateEntity(entity) {
-    Object.assign(this.entity, entity);
+    _.assign(this.entity, entity);
 
     if (entity.pos) {
       this.tween = this.game.add.tween(this).to(this.entity.pos, 300);

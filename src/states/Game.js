@@ -49,10 +49,9 @@ export default class extends Phaser.State {
             selectedClientId: null
           }]);
       } else if (event.keyCode === 46) {
-        Object.keys(this.entities).forEach(key => {
-          const entity = this.entities[key].entity;
+        _.forOwn(this.entities, (id, entity) => {
           if (entity.selectedClientId === this.clientId) {
-            this.socket.emit(types.ENTITY_DELETE_REQUEST, [{id: entity.id}]);
+            this.socket.emit(types.ENTITY_DELETE_REQUEST, [{id}]);
           }
         });
       }
@@ -132,8 +131,7 @@ export default class extends Phaser.State {
     };
 
     this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);
-
-    this.entities = Object.assign(this.entities, {[entity.id]: entitySprite});
+    this.entities[entity.id] = entitySprite;
     this.state.game.add.existing(entitySprite);
     this.group.add(entitySprite);
   }
