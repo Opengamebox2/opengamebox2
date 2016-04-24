@@ -20,7 +20,7 @@ let StartDialog = ({fields, setPlayerName}) => {
         </Modal.Body>
 
         <Modal.Footer>
-          <Button bsStyle="primary" 
+          <Button bsStyle="primary"
                   disabled={name.error !== undefined}
                   onClick={() => { setPlayerName(name.value); }}>PLAY</Button>
         </Modal.Footer>
@@ -39,7 +39,7 @@ const validate = values => {
 };
 
 StartDialog = reduxForm({
-  form: 'startDialog',         
+  form: 'startDialog',
   fields: ['name'],
   validate
 })(StartDialog);
