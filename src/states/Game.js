@@ -68,6 +68,18 @@ export default class extends Phaser.State {
       this.clientId = data.id;
     });
 
+    this.socket.on(types.PLAYER_JOIN, players => {
+      players.forEach(player => {
+        console.log(`Player '${player.id}' joined the game!`);
+      });
+    });
+
+    this.socket.on(types.PLAYER_LEAVE, players => {
+      players.forEach(player => {
+        console.log(`Player '${player.id}' left the game!`);
+      });
+    });
+
     this.socket.on(types.ENTITY_CREATE, entities => {
       entities.forEach(entity => {
         this.handleEntityCreate(entity);
