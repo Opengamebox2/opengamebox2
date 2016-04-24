@@ -32,7 +32,7 @@ export default class extends Phaser.State {
     this.socket = io(`http://${window.location.hostname}:8000`);
     this.socket.on('connect', () => {
       this.socket.emit(types.HANDSHAKE, {authToken: this.player.authToken});
-        console.log('CONNECTED');
+      console.log('CONNECTED');
     });
 
     this.initListeners();
