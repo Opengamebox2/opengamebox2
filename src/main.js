@@ -6,6 +6,7 @@ import BootState from './states/Boot'
 import SplashState from './states/Splash'
 import GameState from './states/Game'
 import App from './ui/App';
+import bootstrap from '../assets/css/bootstrap.min.css';
 
 class Game extends Phaser.Game {
 

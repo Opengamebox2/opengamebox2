@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { createStore, compose} from 'redux';
 
 import PlayerList from './PlayerList.react';
+import StartDialog from './StartDialog.react';
 import rootReducer from './rootReducer';
 
 export const store = createStore(
@@ -14,7 +15,10 @@ export const store = createStore(
 
 ReactDOM.render(
   <Provider store={store}>
-    <PlayerList />
+    <div>
+      <PlayerList />
+      <StartDialog /> : ''
+    </div>
   </Provider>,
   document.getElementById('app')
 );
