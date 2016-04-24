@@ -17,7 +17,6 @@ ReactDOM.render(
   <Provider store={store}>
     <div>
       <PlayerList />
-      <StartDialog /> : ''
     </div>
   </Provider>,
   document.getElementById('app')
