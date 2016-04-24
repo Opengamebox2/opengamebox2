@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 import EntitySprite from '../sprites/EntitySprite';
 import {types, channels} from '../../protocol/protocol';
 import AssetLoader from '../AssetLoader';
-
+import uuid from 'uuid';
 import io from 'socket.io-client';
 
 
@@ -11,6 +11,15 @@ export default class extends Phaser.State {
   init () {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
+
+    if (localStorage.player) {
+      this.player = JSON.parse(localStorage.player);
+    } else {
+      this.player = {authToken: uuid.v4()};
+      localStorage.player = JSON.stringify(this.player);
+    }
+
+    this.clientId = null;
   }
   preload () {
     this.load.crossOrigin = 'anonymous';
@@ -22,6 +31,7 @@ export default class extends Phaser.State {
     // not sure if storing socket in game state makes actual sense
     this.socket = io(`http://${window.location.hostname}:8000`);
     this.socket.on('connect', () => {
+      this.socket.emit(types.HANDSHAKE, {authToken: this.player.authToken});
         console.log('CONNECTED');
     });
 
@@ -39,12 +49,9 @@ export default class extends Phaser.State {
             selectedClientId: null
           }]);
       } else if (event.keyCode === 46) {
-        console.log(this.socket.id);
-
         Object.keys(this.entities).forEach(key => {
-          console.log(this.entities[key].entity);
           const entity = this.entities[key].entity;
-          if (entity.selectedClientId === this.socket.id) {
+          if (entity.selectedClientId === this.clientId) {
             this.socket.emit(types.ENTITY_DELETE_REQUEST, [{id: entity.id}]);
           }
         });
@@ -57,9 +64,12 @@ export default class extends Phaser.State {
   render () {}
 
   initListeners() {
+    this.socket.on(types.HANDSHAKE_REPLY, data => {
+      this.clientId = data.id;
+    });
+
     this.socket.on(types.ENTITY_CREATE, entityArr => {
       entityArr.forEach(entity => {
-        console.log(entity);
         this.handleEntityCreate(entity);
       });
     });
@@ -92,7 +102,7 @@ export default class extends Phaser.State {
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
-      socketClientId: this.socket.id
+      clientId: this.clientId
     });
 
     entitySprite.onSelectRequest = entity => {

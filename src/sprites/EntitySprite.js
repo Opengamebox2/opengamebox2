@@ -2,14 +2,14 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.Sprite {
 
-  constructor ({entity, game, socketClientId}) {
+  constructor ({entity, game, clientId}) {
     super(game, entity.pos.x, entity.pos.y, 'mushroom');
 
     this.game = game;
     this.anchor.setTo(0.5);
     this.entity = entity;
     this.inputEnabled = true;
-    this.socketClientId = socketClientId;
+    this.clientId = clientId;
 
     this.pointerDown = null;
     this.tween = null;
@@ -19,12 +19,13 @@ export default class extends Phaser.Sprite {
     this.onMoveRequest = () => {};
 
     this.initEventListeners();
+    this.updateEntity(entity);
   }
 
   initEventListeners() {
     this.events.onInputDown.add((entitySprite, pointer) => {
       const selectedClientId = entitySprite.entity.selectedClientId;
-      if (selectedClientId === null || selectedClientId === this.socketClientId) {
+      if (selectedClientId === null || selectedClientId === this.clientId) {
         if (this.tween) {
           this.tween.stop();
         }
@@ -48,7 +49,7 @@ export default class extends Phaser.Sprite {
   }
 
   update () {
-    if (this.entity.selectedClientId === this.socketClientId) {
+    if (this.entity.selectedClientId === this.clientId) {
       this.tint = 0xccffff;
     } else if (this.entity.selectedClientId !== null) {
       this.tint = 0xffccff;
@@ -64,7 +65,7 @@ export default class extends Phaser.Sprite {
       this.tween.start();
     }
     
-    if (this.entity.selectedClientId === this.socketClientId) {
+    if (this.entity.selectedClientId === this.clientId) {
       this.input.enableDrag();
       if (this.pointerDown) {
         this.x += this.pointerDown.pointer.x - this.pointerDown.x;

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "phaser": "^2.4.6",
-    "socket.io-client": "^1.4.5"
+    "socket.io-client": "^1.4.5",
+    "uuid": "^2.0.2"
   }
 }
