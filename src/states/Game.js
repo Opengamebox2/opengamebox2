@@ -68,15 +68,15 @@ export default class extends Phaser.State {
       this.clientId = data.id;
     });
 
-    this.socket.on(types.ENTITY_CREATE, entityArr => {
-      entityArr.forEach(entity => {
+    this.socket.on(types.ENTITY_CREATE, entities => {
+      entities.forEach(entity => {
         this.handleEntityCreate(entity);
       });
       this.group.sort();
     });
 
-    this.socket.on(types.ENTITY_DELETE, entityArr => {
-      entityArr.forEach(entity => {
+    this.socket.on(types.ENTITY_DELETE, entities => {
+      entities.forEach(entity => {
         const id = entity.id;
         const sprite = this.entities[id];
         if (sprite) {
