@@ -49,11 +49,16 @@ export default class extends Phaser.State {
             selectedClientId: null
           }]);
       } else if (event.keyCode === 46) {
-        _.forOwn(this.entities, (id, entity) => {
-          if (entity.selectedClientId === this.clientId) {
-            this.socket.emit(types.ENTITY_DELETE_REQUEST, [{id}]);
-          }
-        });
+        const selection = _(this.entities)
+                          .map(x => x.entity)
+                          .pickBy({selectedClientId: this.clientId})
+                          .values()
+                          .map(entity => { return {id: entity.id}; })
+                          .value();
+
+        if (selection.length > 0) {
+          this.socket.emit(types.ENTITY_DELETE_REQUEST, selection);
+        }
       }
     };
 
