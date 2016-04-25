@@ -7,71 +7,40 @@ export default class extends Phaser.State {
   create () {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
-    this.clientId = null;
 
     this.game.stage.disableVisibilityChange = true;
     this.group = this.game.add.group();
     this.load.crossOrigin = 'anonymous';
 
-    this.initListeners();
     this.addInputCallbacks();
 
     this.game.store.dispatch('CONNECT');
-  }
 
-  initListeners() {
-    if (localStorage.player) {
-      this.player = JSON.parse(localStorage.player);
-    } else {
-      this.player = {authToken: uuid.v4()};
-      localStorage.player = JSON.stringify(this.player);
-    }
-
-    this.game.store.on('CONNECTED', () => {
-      this.game.store.dispatch('HANDSHAKE', {authToken: this.player.authToken});
-    });
-
-    this.game.store.on('HANDSHAKE_REPLY', data => {
-      this.clientId = data.id;
-    });
-
-    this.game.store.on('PLAYER_JOIN', players => {
-      players.forEach(player => {
-        console.log(`Player '${player.id}' joined the game!`);
+    this.game.store.getReduxStore().subscribe(() => {
+      const lastAction = this.game.store.getState().lastAction;
+      const entities = this.getGameState().entities;
+      _.forOwn(entities, (entity, id) => {
+        if (!this.entities[id]) {
+          console.log('Creating entity', entity);
+          this.handleEntityCreate(entity);
+        }
       });
-    });
 
-    this.game.store.on('PLAYER_LEAVE', players => {
-      players.forEach(player => {
-        console.log(`Player '${player.id}' left the game!`);
-      });
-    });
-
-    this.game.store.on('ENTITY_CREATE', entities => {
-      entities.forEach(entity => {
-        this.handleEntityCreate(entity);
-      });
-      this.group.sort();
-    });
-
-    this.game.store.on('ENTITY_DELETE', entities => {
-      entities.forEach(entity => {
-        const id = entity.id;
-        const sprite = this.entities[id];
-        if (sprite) {
-          sprite.destroy();
+      _.forOwn(this.entities, (entity, id) => {
+        if (!entities[id]) {
+          entity.destroy();
           delete this.entities[id];
         }
       });
-    });
 
-    this.game.store.on('ENTITY_SELECT', entities => {
-      this.updateEntities(entities);
-    });
+      this.group.sort();
 
-    this.game.store.on('ENTITY_MOVE', entities => {
-      this.updateEntities(entities);
+      _.forOwn(this.entities, entity => entity.updateEntity());
     });
+  }
+
+  getGameState() {
+    return this.game.store.getState().game;
   }
 
   addInputCallbacks() {
@@ -91,7 +60,7 @@ export default class extends Phaser.State {
       case 46: {
         const selection = _(this.entities)
                           .map(x => x.entity)
-                          .pickBy({selectedClientId: this.clientId})
+                          .pickBy({selectedClientId: this.getGameState().clientId})
                           .values()
                           .map(entity => { return {id: entity.id}; })
                           .value();
@@ -104,18 +73,11 @@ export default class extends Phaser.State {
     }
   }
 
-  updateEntities(entities) {
-    entities.forEach(entity => {
-      this.entities[entity.id].updateEntity(entity);
-    });
-    this.group.sort();
-  }
-
   handleEntityCreate(entity) {
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
-      clientId: this.clientId
+      clientId: this.getGameState().clientId
     });
 
     entitySprite.onSelectRequest = entity => {

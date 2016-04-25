@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 import {ListGroup, ListGroupItem} from 'react-bootstrap';
 import {connect} from 'react-redux';
@@ -24,12 +25,8 @@ const PlayerList = ({players}) => {
 };
 
 const mapStateToProps = state => {
-  const players = [];
-  Object.keys(state.players).forEach(key => {
-    players.push(state.players[key]);
-  });
   return {
-    players
+    players: _.values(state.game.players)
   };
 };
 

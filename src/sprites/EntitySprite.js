@@ -20,7 +20,6 @@ export default class extends Phaser.Sprite {
     this.onMoveRequest = () => {};
 
     this.initEventListeners();
-    this.updateEntity(entity);
   }
 
   initEventListeners() {
@@ -47,41 +46,53 @@ export default class extends Phaser.Sprite {
       const y = entitySprite.y;
       this.onMoveRequest({id: entitySprite.entity.id, pos: {x, y}});
     }, this);
-
-    this.game.store.on(['PLAYER_JOIN', 'PLAYER_LEAVE'], () => { this.updateColor() });
   }
 
   update() {}
 
-  updateEntity(entity) {
-    _.assign(this.entity, entity);
+  updateEntity() {
+    const gameState = this.game.store.getState().game;
+    const newEntity = gameState.entities[this.entity.id];
+    let colorNeedsUpdate = false;
 
-    if (entity.pos) {
-      this.tween = this.game.add.tween(this).to(this.entity.pos, 300);
-      this.tween.start();
-    }
-
-    if (_.has(entity, 'selectedClientId')) {
-      this.updateColor();
-
-      if (this.entity.selectedClientId === this.clientId) {
-        this.input.enableDrag();
-        if (this.pointerDown) {
-          this.x += this.pointerDown.pointer.x - this.pointerDown.x;
-          this.y += this.pointerDown.pointer.y - this.pointerDown.y;
-          this.input.startDrag(this.pointerDown.pointer);
-        }
-      } else {
-        this.input.disableDrag();
+    if (newEntity !== this.entity) {
+      if (newEntity.pos !== this.entity.pos) {
+        this.tween = this.game.add.tween(this).to(newEntity.pos, 300);
+        this.tween.start();
       }
+
+      if (newEntity.selectedClientId !== this.entity.selectedClientId) {
+        if (newEntity.selectedClientId === gameState.clientId) {
+          this.input.enableDrag();
+          if (this.pointerDown) {
+            this.x += this.pointerDown.pointer.x - this.pointerDown.x;
+            this.y += this.pointerDown.pointer.y - this.pointerDown.y;
+            this.input.startDrag(this.pointerDown.pointer);
+          }
+        } else {
+          this.input.disableDrag();
+        }
+
+        colorNeedsUpdate = true;
+      }
+
+      this.z = newEntity.depth;
+      this.entity = newEntity;
     }
 
-    this.z = this.entity.depth;
+    if (this.players !== gameState.players) {
+      this.players = gameState.players;
+      colorNeedsUpdate = true;
+    }
+
+    if (colorNeedsUpdate) {
+      this.updateColor();
+    }
   }
 
   updateColor() {
     if (this.entity.selectedClientId !== null) {
-      const player = this.game.store.getState().players[this.entity.selectedClientId];
+      const player = this.game.store.getState().game.players[this.entity.selectedClientId];
       if (player) {
         this.tint = Phaser.Color.HSLtoRGB(player.hue, 1.0, 0.9).color;
       } else {

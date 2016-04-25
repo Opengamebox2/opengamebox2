@@ -1,12 +1,14 @@
 import settingsReducer from './settingsReducer';
-import playersReducer from './playersReducer';
+import gameReducer from './gameReducer';
+import lastActionReducer from './lastActionReducer';
 import {reducer as formReducer} from 'redux-form';
 
 import { combineReducers } from 'redux';
 
 const rootReducer = combineReducers({
 	settings: settingsReducer,
-	players: playersReducer,
+	game: gameReducer,
+	lastAction: lastActionReducer,
 	form: formReducer,
 });
 

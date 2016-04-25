@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import io from 'socket.io-client';
 import protocol from '../protocol';
+import uuid from 'uuid';
 
 export default class Connection {
   constructor(store) {
@@ -10,6 +11,16 @@ export default class Connection {
       this.socket.on('connect', () => {
         console.log('Connected to the server!');
         store.dispatch('CONNECTED', {});
+
+        // TODO: move this somewhere else
+        if (localStorage.player) {
+          this.player = JSON.parse(localStorage.player);
+        } else {
+          this.player = {authToken: uuid.v4()};
+          localStorage.player = JSON.stringify(this.player);
+        }
+
+        store.dispatch('HANDSHAKE', {authToken: this.player.authToken});
       });
 
       this.socket.on('disconnect', () => {

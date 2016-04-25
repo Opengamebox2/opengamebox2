@@ -58,7 +58,6 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     setPlayerName: name => {
-      console.log(name);
       dispatch({
         type: 'SETTINGS_UPDATE',
         data: { name },
