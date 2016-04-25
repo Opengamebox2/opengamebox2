@@ -5,6 +5,7 @@ import bootstrap from '../../assets/css/bootstrap.min.css';
 
 import PlayerList from './PlayerList.react';
 import StartDialog from './StartDialog.react';
+import Favorites from './Favorites.react';
 
 export default {
   init: (store) => {
@@ -13,6 +14,7 @@ export default {
         <div>
           <PlayerList />
           <StartDialog />
+          <Favorites />
         </div>
       </Provider>,
       document.getElementById('app')

@@ -9,13 +9,9 @@ function settingsReducer(state = {
       return _.assign({}, state, action.data);
     }
 
-    case 'ENTITY_CREATE': {
+    case 'FAVORITE_ADD': {
       const images = _.clone(state.images);
-      action.data.forEach(entity => {
-        if (!images[entity.imgHash]) {
-        images[entity.imgHash] = {};
-        }
-      });
+      images[action.data.imgHash] = {thumbnail: action.data.thumbnail};
       return _.assign({}, state, {images});
     }
 
