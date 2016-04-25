@@ -38,6 +38,10 @@ export default class extends Phaser.State {
     });
   }
 
+  init() {
+    this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+  }
+
   getGameState() {
     return this.game.store.getState().game;
   }
