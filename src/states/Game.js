@@ -71,8 +71,8 @@ export default class extends Phaser.State {
 
     scrollKeys.forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
-        this.camera.x += value.x ? value.x * time * scrollSpeed : this.camera.x;
-        this.camera.y += value.y ? value.y * time * scrollSpeed : this.camera.y;
+        this.camera.x += value.x !== undefined ? value.x * time * scrollSpeed : this.camera.x;
+        this.camera.y += value.y !== undefined ? value.y * time * scrollSpeed : this.camera.y;
         if (value.zoom) {
           let scale = this.camera.scale.x;
           scale += value.zoom * zoomSpeed;
