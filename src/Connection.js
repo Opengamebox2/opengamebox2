@@ -33,7 +33,7 @@ export default class Connection {
       })
 
       _()
-      .assign(protocol.broadcast, protocol.replies)
+      .assign(protocol.events, protocol.replies)
       .forOwn((typeCode, type) => {
         this.socket.on(typeCode, data => {
           store.dispatch(type, data);

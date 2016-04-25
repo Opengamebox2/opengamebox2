@@ -59,7 +59,7 @@ const mapDispatchToProps = dispatch => {
   return {
     setPlayerName: name => {
       dispatch({
-        type: 'SETTINGS_UPDATE',
+        type: 'PLAYER_UPDATE_REQUEST',
         data: { name },
       });
     }
