@@ -2,11 +2,16 @@ import _ from 'lodash';
 import * as redux from 'redux';
 import rootReducer from './reducers/rootReducer';
 
+import {persistStore, autoRehydrate} from 'redux-persist'
+
 export default class Store {
   constructor() {
     const devTools = window.devToolsExtension ? window.devToolsExtension() : x => x;
-    this.store = redux.createStore(rootReducer, {}, devTools);
+    const enchancer = redux.compose(autoRehydrate(), devTools);
+    this.store = redux.createStore(rootReducer, {}, enchancer);
     this.actionHandlers = [];
+
+    persistStore(this.store, {whitelist: ['settings']}, () => {});
 
     this.store.subscribe(() => {
       const action = this.store.getState().lastAction;

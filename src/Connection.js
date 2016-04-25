@@ -21,6 +21,11 @@ export default class Connection {
         }
 
         store.dispatch('HANDSHAKE', {authToken: this.player.authToken});
+
+        const name = store.getState().settings.name;
+        if (name) {
+          store.dispatch('PLAYER_UPDATE_REQUEST', {name});
+        }
       });
 
       this.socket.on('disconnect', () => {
