@@ -16,12 +16,11 @@ export default class extends Phaser.State {
 
     this.game.store.dispatch('CONNECT');
 
-    this.game.store.getReduxStore().subscribe(() => {
+    this.game.store.subscribe(() => {
       const lastAction = this.game.store.getState().lastAction;
       const entities = this.getGameState().entities;
       _.forOwn(entities, (entity, id) => {
         if (!this.entities[id]) {
-          console.log('Creating entity', entity);
           this.handleEntityCreate(entity);
         }
       });
@@ -77,7 +76,6 @@ export default class extends Phaser.State {
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
-      clientId: this.getGameState().clientId
     });
 
     entitySprite.onSelectRequest = entity => {

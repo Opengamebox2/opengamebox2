@@ -5,23 +5,17 @@ import rootReducer from './reducers/rootReducer';
 export default class Store {
   constructor() {
     const devTools = window.devToolsExtension ? window.devToolsExtension() : x => x;
-    const enhancer = redux.compose(devTools, redux.applyMiddleware(this.middleware.bind(this)));
-    this.store = redux.createStore(rootReducer, {}, enhancer);
+    this.store = redux.createStore(rootReducer, {}, devTools);
     this.actionHandlers = [];
-  }
 
-  middleware() {
-    return (next) => container => {
-      if (container.type === 'PERFORM_ACTION') {
-        this.actionHandlers.forEach(handler => {
-          if (_.includes(handler.types, container.action.type)) {
-            handler.handler(container.action.data, container.action.type);
-          }
-        });
-      }
-
-      return next(container);
-    }
+    this.store.subscribe(() => {
+      const action = this.store.getState().lastAction;
+      this.actionHandlers.forEach(handler => {
+        if (_.includes(handler.types, action.type)) {
+          handler.handler(action.data, action.type);
+        }
+      });
+    });
   }
 
   on(types, handler) {
@@ -30,6 +24,10 @@ export default class Store {
     }
 
     this.actionHandlers.push({ types, handler });
+  }
+
+  subscribe(callback) {
+    return this.store.subscribe(callback);
   }
 
   dispatch(type, data = {}) {

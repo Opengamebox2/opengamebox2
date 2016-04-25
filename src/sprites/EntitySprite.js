@@ -3,29 +3,31 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.Sprite {
 
-  constructor ({entity, game, clientId}) {
+  constructor ({entity, game}) {
     super(game, entity.pos.x, entity.pos.y, 'mushroom');
 
     this.game = game;
     this.anchor.setTo(0.5);
-    this.entity = entity;
+    this.entity = {id: entity.id};
     this.inputEnabled = true;
-    this.clientId = clientId;
 
     this.pointerDown = null;
     this.tween = null;
+    this.players = null;
+
     // callbacks set by caller
     this.onDeleteRequest = () => {};
     this.onSelectRequest = () => {};
     this.onMoveRequest = () => {};
 
     this.initEventListeners();
+    this.updateEntity();
   }
 
   initEventListeners() {
     this.events.onInputDown.add((entitySprite, pointer) => {
       const selectedClientId = entitySprite.entity.selectedClientId;
-      if (selectedClientId === null || selectedClientId === this.clientId) {
+      if (selectedClientId === null || selectedClientId === this.game.store.getState().game.clientId) {
         if (this.tween) {
           this.tween.stop();
         }
