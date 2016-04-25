@@ -45,17 +45,6 @@ export default class extends Phaser.State {
   addInputCallbacks() {
     this.input.keyboard.onDownCallback = event => {
       switch (event.keyCode) {
-      case 32: {
-        const pos = this.input.position;
-        this.game.store.dispatch('ENTITY_CREATE_REQUEST',
-          [{
-            pos: {x: pos.x, y: pos.y},
-            imgHash: document.getElementById('imageHash').value,
-            selectedClientId: null,
-          }]
-        );
-      } break
-
       case 46: {
         const selection = _(this.entities)
                           .map(x => x.entity)
