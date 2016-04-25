@@ -54,6 +54,7 @@ export default class extends Phaser.State {
   updateCamera() {
     const time = this.game.time.elapsed;
     const scrollSpeed = 1;
+    const zoomSpeed = 0.01;
 
     const scrollKeys = [
       {key: Phaser.Keyboard.UP, y: -1, x: 0},
@@ -64,12 +65,20 @@ export default class extends Phaser.State {
       {key: Phaser.Keyboard.D, y: 0, x: 1},
       {key: Phaser.Keyboard.S, y: 1, x: 0},
       {key: Phaser.Keyboard.A, y: 0, x: -1},
+      {key: Phaser.Keyboard.Q, zoom: 1},
+      {key: Phaser.Keyboard.E, zoom: -1},
     ];
 
     scrollKeys.forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
-        this.camera.x += value.x * time * scrollSpeed;
-        this.camera.y += value.y * time * scrollSpeed;
+        this.camera.x += value.x ? value.x * time * scrollSpeed : this.camera.x;
+        this.camera.y += value.y ? value.y * time * scrollSpeed : this.camera.y;
+        if (value.zoom) {
+          let scale = this.camera.scale.x;
+          scale += value.zoom * zoomSpeed;
+          scale = Phaser.Math.clamp(scale, 0.25, 2);
+          this.camera.scale.setTo(scale);
+        }
       }
     });
   }

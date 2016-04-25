@@ -47,6 +47,18 @@ export default class extends Phaser.Sprite {
       const x = entitySprite.x;
       const y = entitySprite.y;
       this.onMoveRequest({id: entitySprite.entity.id, pos: {x, y}});
+      entitySprite.dragOffset = null;
+    }, this);
+
+    this.events.onDragStart.add((entitySprite, pointer, x, y) => {
+      entitySprite.dragOffset = {x: x - entitySprite.x, y: y - entitySprite.y};
+    });
+
+    this.events.onDragUpdate.add((entitySprite, pointer, x, y) => {
+      const pos = entitySprite.game.input.getLocalPosition(entitySprite.parent, pointer);
+      const dragOffset = entitySprite.dragOffset || {x: 0, y: 0};
+      entitySprite.x = pos.x + dragOffset.x;
+      entitySprite.y = pos.y + dragOffset.y;
     }, this);
   }
 
