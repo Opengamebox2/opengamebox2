@@ -40,10 +40,38 @@ export default class extends Phaser.State {
 
   init() {
     this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+    this.game.world.setBounds(0, 0, 5000, 5000);
   }
 
   getGameState() {
     return this.game.store.getState().game;
+  }
+
+  update() {
+    this.updateCamera();
+  }
+
+  updateCamera() {
+    const time = this.game.time.elapsed;
+    const scrollSpeed = 1;
+
+    const scrollKeys = [
+      {key: Phaser.Keyboard.UP, y: -1, x: 0},
+      {key: Phaser.Keyboard.RIGHT, y: 0, x: 1},
+      {key: Phaser.Keyboard.DOWN, y: 1, x: 0},
+      {key: Phaser.Keyboard.LEFT, y: 0, x: -1},
+      {key: Phaser.Keyboard.W, y: -1, x: 0},
+      {key: Phaser.Keyboard.D, y: 0, x: 1},
+      {key: Phaser.Keyboard.S, y: 1, x: 0},
+      {key: Phaser.Keyboard.A, y: 0, x: -1},
+    ];
+
+    scrollKeys.forEach(value => {
+      if (this.input.keyboard.isDown(value.key)) {
+        this.camera.x += value.x * time * scrollSpeed;
+        this.camera.y += value.y * time * scrollSpeed;
+      }
+    });
   }
 
   addInputCallbacks() {
