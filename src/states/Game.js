@@ -32,9 +32,9 @@ export default class extends Phaser.State {
         }
       });
 
-      this.group.sort();
-
       _.forOwn(this.entities, entity => entity.updateEntity());
+
+      this.group.sort();
     });
   }
 
