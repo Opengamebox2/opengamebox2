@@ -40,7 +40,7 @@ export default class extends Phaser.State {
 
   init() {
     this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-    this.game.world.setBounds(0, 0, 5000, 5000);
+    this.game.world.setBounds(0, 0, 10000, 10000);
   }
 
   getGameState() {
@@ -71,13 +71,43 @@ export default class extends Phaser.State {
 
     scrollKeys.forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
-        this.camera.x += value.x !== undefined ? value.x * time * scrollSpeed : this.camera.x;
-        this.camera.y += value.y !== undefined ? value.y * time * scrollSpeed : this.camera.y;
         if (value.zoom) {
-          let scale = this.camera.scale.x;
-          scale += value.zoom * zoomSpeed;
-          scale = Phaser.Math.clamp(scale, 0.25, 2);
-          this.camera.scale.setTo(scale);
+            const scaleMinLimit = Math.max(this.game.width / this.game.world.bounds.width,
+                this.game.height / this.game.world.bounds.height);
+            const scaleMaxLimit = 2.5;
+
+            const cameraXBorderDistance = (this.camera.x / this.camera.scale.x);
+            const cameraXPointerDistance = (this.game.input.worldX / this.camera.scale.x) - cameraXBorderDistance;
+            const cameraWidth = this.game.width / this.camera.scale.x;
+            let scaleX = this.camera.scale.x;
+            scaleX += value.zoom * zoomSpeed;
+            scaleX = Phaser.Math.clamp(scaleX, scaleMinLimit, scaleMaxLimit);
+
+            const cameraYBorderDistance = (this.camera.y / this.camera.scale.y);
+            const cameraYPointerDistance = (this.game.input.worldY / this.camera.scale.y) - (this.camera.y / this.camera.scale.y);
+            const cameraHeight = this.game.height / this.camera.scale.y;
+            let scaleY = this.camera.scale.y;
+            scaleY += value.zoom * zoomSpeed;
+            scaleY = Phaser.Math.clamp(scaleY, scaleMinLimit, scaleMaxLimit);
+
+            this.camera.scale.setTo(scaleX, scaleY);
+
+
+            const newCameraWidth = this.game.width / this.camera.scale.x;
+            const newCameraXPointerDistance = (cameraXPointerDistance * newCameraWidth) / cameraWidth;
+            const newCameraXBorderDistanceDiff = newCameraXPointerDistance - cameraXPointerDistance;
+            const newCameraXPos = cameraXBorderDistance - newCameraXBorderDistanceDiff;
+            this.camera.x = newCameraXPos * this.camera.scale.x;
+
+
+            const newCameraHeight = this.game.height / this.camera.scale.y;
+            const newCameraYPointerDistance = (cameraYPointerDistance * newCameraHeight) / cameraHeight;
+            const newCameraYBorderDistanceDiff = newCameraYPointerDistance - cameraYPointerDistance;
+            const newCameraYPos = cameraYBorderDistance - newCameraYBorderDistanceDiff;
+            this.camera.y = newCameraYPos * this.camera.scale.y;
+        } else {
+            this.camera.x += value.x !== undefined ? value.x * time * scrollSpeed : this.camera.x;
+            this.camera.y += value.y !== undefined ? value.y * time * scrollSpeed : this.camera.y;
         }
       }
     });
