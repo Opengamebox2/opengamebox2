@@ -7,14 +7,18 @@ import PlayerList from './PlayerList.react';
 import StartDialog from './StartDialog.react';
 import Favorites from './Favorites.react';
 
+import Menu from './Menu.react';
+
 export default {
   init: (store) => {
     ReactDOM.render(
       <Provider store={store.getReduxStore()}>
         <div>
-          <PlayerList />
           <StartDialog />
-          <Favorites />
+          <Menu>
+            <PlayerList />
+            <Favorites />
+          </Menu>
         </div>
       </Provider>,
       document.getElementById('app')

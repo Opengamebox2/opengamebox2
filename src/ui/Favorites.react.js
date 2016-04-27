@@ -10,13 +10,11 @@ const Favorite = ({
   return (
     <ListGroupItem>
       <Row>
-        <Col xs={2}>
+        <Col xs={3}>
           <Image src={img.thumbnail} responsive />
         </Col>
-        <Col xs={8}>
-          {img.imgHash}
-        </Col>
-        <Col xs={2}>
+        <Col xs={9} className="extra_small">
+          <p>{img.imgHash}</p>
           <Button bsStyle="primary" onClick={() => { createEntity(img.imgHash); }}>
             Create
           </Button>
@@ -31,10 +29,10 @@ const Favorites = ({
 }) => {
   return (
     <div>
-      <h2>Add new favorite</h2>
+      <h3>Add new favorite</h3>
       <FavoritesAdd />
       <hr />
-      <h2>Favorites</h2>
+      <h3>Favorites</h3>
       <ListGroup>
         {
           images.map(img => {

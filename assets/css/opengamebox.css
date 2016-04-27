@@ -1,0 +1,74 @@
+:root {
+  --primary_color: #375a7f;
+  --info_color: #3498db;
+  --background_color: #222222;
+
+  --menu-width-normal: 40rem;
+  --menu-width-small: 30rem;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+}
+
+#content {
+  flex: 1;
+}
+
+.menu_view {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 0 0.5rem 0 1rem;
+  background-color: #222222;
+  height: 100%;
+  opacity: 0;
+  width: var(--menu-width-normal);
+  transition: transform 400ms, opacity 200ms;
+  transform: translateX(var(--menu-width-normal));
+  overflow-y: auto;
+}
+
+.menu_view.visible {
+  transform: translateX(0);
+  visibility: visible;
+  opacity: 1;
+}
+
+.menu_controller {
+  position: fixed;
+  top: 0;
+  right: 0;
+  color: var(--info_color);
+  font-size: 4rem;
+  background-color: var(--background_color);
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  margin: 0;
+  line-height: 4rem;
+  z-index: 1000;
+}
+
+.menu_controller:hover, .menu_controller:active {
+  color: var(--primary_color);
+}
+
+@media (max-width: 40rem) {
+  .menu_view {
+    width: var(--menu-width-small);
+    transform: translateX(var(--menu-width-small));
+  }
+}
+
+.extra_small {
+  font-size: 0.6rem;
+}
+
+.btn {
+  text-transform: uppercase;
+}

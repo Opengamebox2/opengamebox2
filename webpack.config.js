@@ -1,7 +1,7 @@
 var path = require('path')
 var webpack = require('webpack')
 var BrowserSyncPlugin = require('browser-sync-webpack-plugin')
-
+var postcssCustomProperties = require('postcss-custom-properties');
 // Phaser webpack config
 var phaserModule = path.join(__dirname, '/node_modules/phaser/')
 var phaser = path.join(phaserModule, 'build/custom/phaser-split.js')
@@ -55,6 +55,9 @@ module.exports = {
       },
       { test: /\.(png|woff|woff2|eot|ttf|svg)$/, loader: 'url-loader?limit=100000' },
     ]
+  },
+  postcss: function() {
+    return [postcssCustomProperties];
   },
   node: {
     fs: 'empty'
