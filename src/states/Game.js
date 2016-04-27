@@ -2,11 +2,13 @@ import _ from 'lodash';
 import Phaser from 'phaser';
 import AssetLoader from '../AssetLoader';
 import EntitySprite from '../sprites/EntitySprite';
+import Camera from '../Camera';
 
 export default class extends Phaser.State {
   create () {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
+    this.cam = new Camera(this.camera, this.game);
 
     this.game.stage.disableVisibilityChange = true;
     this.group = this.game.add.group();
@@ -41,6 +43,7 @@ export default class extends Phaser.State {
   init() {
     this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
     this.game.world.setBounds(0, 0, 10000, 10000);
+    this.game.input.mouse.mouseWheelCallback = this.mouseWheel.bind(this);
   }
 
   getGameState() {
@@ -49,6 +52,22 @@ export default class extends Phaser.State {
 
   update() {
     this.updateCamera();
+    this.cam.update();
+  }
+
+
+  mouseWheel(event) {
+    event.preventDefault();
+    let direction;
+    const zoomSpeed = 0.1;
+
+    if (this.game.input.mouse.wheelDelta === Phaser.Mouse.WHEEL_UP) {
+      direction = 1;
+    } else {
+      direction = -1;
+    }
+
+    this.cam.setScale(this.cam.getScale() + direction * 0.05);
   }
 
   updateCamera() {
@@ -72,42 +91,10 @@ export default class extends Phaser.State {
     scrollKeys.forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
         if (value.zoom) {
-            const scaleMinLimit = Math.max(this.game.width / this.game.world.bounds.width,
-                this.game.height / this.game.world.bounds.height);
-            const scaleMaxLimit = 2.5;
-
-            const cameraXBorderDistance = (this.camera.x / this.camera.scale.x);
-            const cameraXPointerDistance = (this.game.input.worldX / this.camera.scale.x) - cameraXBorderDistance;
-            const cameraWidth = this.game.width / this.camera.scale.x;
-            let scaleX = this.camera.scale.x;
-            scaleX += value.zoom * zoomSpeed;
-            scaleX = Phaser.Math.clamp(scaleX, scaleMinLimit, scaleMaxLimit);
-
-            const cameraYBorderDistance = (this.camera.y / this.camera.scale.y);
-            const cameraYPointerDistance = (this.game.input.worldY / this.camera.scale.y) - (this.camera.y / this.camera.scale.y);
-            const cameraHeight = this.game.height / this.camera.scale.y;
-            let scaleY = this.camera.scale.y;
-            scaleY += value.zoom * zoomSpeed;
-            scaleY = Phaser.Math.clamp(scaleY, scaleMinLimit, scaleMaxLimit);
-
-            this.camera.scale.setTo(scaleX, scaleY);
-
-
-            const newCameraWidth = this.game.width / this.camera.scale.x;
-            const newCameraXPointerDistance = (cameraXPointerDistance * newCameraWidth) / cameraWidth;
-            const newCameraXBorderDistanceDiff = newCameraXPointerDistance - cameraXPointerDistance;
-            const newCameraXPos = cameraXBorderDistance - newCameraXBorderDistanceDiff;
-            this.camera.x = newCameraXPos * this.camera.scale.x;
-
-
-            const newCameraHeight = this.game.height / this.camera.scale.y;
-            const newCameraYPointerDistance = (cameraYPointerDistance * newCameraHeight) / cameraHeight;
-            const newCameraYBorderDistanceDiff = newCameraYPointerDistance - cameraYPointerDistance;
-            const newCameraYPos = cameraYBorderDistance - newCameraYBorderDistanceDiff;
-            this.camera.y = newCameraYPos * this.camera.scale.y;
+          this.cam.setScale(this.cam.getScale() + value.zoom * zoomSpeed);
         } else {
-            this.camera.x += value.x !== undefined ? value.x * time * scrollSpeed : this.camera.x;
-            this.camera.y += value.y !== undefined ? value.y * time * scrollSpeed : this.camera.y;
+          this.cam.camera.x += value.x * time * scrollSpeed;
+          this.cam.camera.y += value.y * time * scrollSpeed;
         }
       }
     });
