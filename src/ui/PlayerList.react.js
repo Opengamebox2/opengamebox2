@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 const PlayerList = ({players}) => {
   return (
     <div>
-      <h3>Players</h3>
+      <h4>{players.length} online</h4>
       <ListGroup>
       {
         players.map(player => {

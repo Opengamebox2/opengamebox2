@@ -27,12 +27,21 @@ const Favorite = ({
 const Favorites = ({
   createEntity, images
 }) => {
+  let favoriteTxt;
+  if (images.length === 0) {
+    favoriteTxt = 'No favorites';
+  } else if (images.length === 1) {
+    favoriteTxt = '1 favorite';
+  } else {
+    favoriteTxt = `${images.length} favorites`;
+  }
+
   return (
     <div>
-      <h3>Add new favorite</h3>
+      <h4>Add new favorite</h4>
       <FavoritesAdd />
       <hr />
-      <h3>Favorites</h3>
+      <h4>{favoriteTxt}</h4>
       <ListGroup>
         {
           images.map(img => {
