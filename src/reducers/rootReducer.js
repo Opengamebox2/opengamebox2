@@ -7,11 +7,11 @@ import {reducer as formReducer} from 'redux-form';
 import { combineReducers } from 'redux';
 
 const rootReducer = combineReducers({
-	settings: settingsReducer,
-	game: gameReducer,
-	lastAction: lastActionReducer,
-	ui: uiReducer,
-	form: formReducer,
+  settings: settingsReducer,
+  game: gameReducer,
+  lastAction: lastActionReducer,
+  ui: uiReducer,
+  form: formReducer,
 });
 
 export default rootReducer;

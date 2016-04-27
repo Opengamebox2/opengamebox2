@@ -1,54 +1,54 @@
 export default class Camera {
-	constructor(camera, game) {
-		this.camera = camera;
-		this.game = game;
+  constructor(camera, game) {
+    this.camera = camera;
+    this.game = game;
 
-		this.zoomScale = 1;
-	}
+    this.zoomScale = 1;
+  }
 
-	update() {
-		let zoomDir = null;
+  update() {
+    let zoomDir = null;
 
     if (this.camera.scale.x - this.zoomScale > 0.01) {
-    	zoomDir = -1;
+      zoomDir = -1;
     } else if (this.camera.scale.x - this.zoomScale < -0.01) {
       zoomDir = 1;
     }
 
     if (zoomDir !== null) {
-    	const time = this.game.time.elapsed;
-    	const zoomSpeed = 0.0006 * time;
-    	const newScale = zoomSpeed * zoomDir;
-    	this.zoomTo(newScale, this.getPointerX(), this.getPointerY());
+      const time = this.game.time.elapsed;
+      const zoomSpeed = 0.0006 * time;
+      const newScale = zoomSpeed * zoomDir;
+      this.zoomTo(newScale, this.getPointerX(), this.getPointerY());
     }
-	}
+  }
 
-	setScale(amount) {
-		amount = Math.max(amount, this.getScaleMinLimit());
-		amount = Math.min(amount, this.getScaleMaxLimit());
-		this.zoomScale = amount;
-	}
+  setScale(amount) {
+    amount = Math.max(amount, this.getScaleMinLimit());
+    amount = Math.min(amount, this.getScaleMaxLimit());
+    this.zoomScale = amount;
+  }
 
-	getScale() {
-		return this.zoomScale;
-	}
+  getScale() {
+    return this.zoomScale;
+  }
 
-	getPointerX() {
-		return this.game.input.worldX / this.camera.scale.x;
-	}
+  getPointerX() {
+    return this.game.input.worldX / this.camera.scale.x;
+  }
 
-	getPointerY() {
-		return this.game.input.worldY / this.camera.scale.y;
-	}
+  getPointerY() {
+    return this.game.input.worldY / this.camera.scale.y;
+  }
 
-	getScaleMinLimit() {
-		return Math.max(this.game.width / this.game.world.bounds.width,
+  getScaleMinLimit() {
+    return Math.max(this.game.width / this.game.world.bounds.width,
     this.game.height / this.game.world.bounds.height);
-	}
+  }
 
-	getScaleMaxLimit() {
-		return 2.5;
-	}
+  getScaleMaxLimit() {
+    return 2.5;
+  }
 
   zoomTo(amount, x, y) {
     const scaleMinLimit = this.getScaleMinLimit();
