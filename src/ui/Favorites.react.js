@@ -5,7 +5,7 @@ import {connect} from 'react-redux';
 import FavoritesAdd from './FavoritesAdd.react';
 
 const Favorite = ({
-  img, createEntity
+  img, createEntity, camera
 }) => {
   return (
     <ListGroupItem>
@@ -15,7 +15,7 @@ const Favorite = ({
         </Col>
         <Col xs={9} className="extra_small">
           <p>{img.imgHash}</p>
-          <Button bsStyle="primary" onClick={() => { createEntity(img.imgHash); }}>
+          <Button bsStyle="primary" onClick={() => { createEntity(img.imgHash, {x: camera.x, y: camera.y}); }}>
             Create
           </Button>
         </Col>
@@ -25,7 +25,7 @@ const Favorite = ({
 };
 
 const Favorites = ({
-  createEntity, images
+  createEntity, images, camera
 }) => {
   let favoriteTxt;
   if (images.length === 0) {
@@ -47,6 +47,7 @@ const Favorites = ({
           images.map(img => {
             return (<Favorite key={img.imgHash}
                               img={img}
+                              camera={camera}
                               createEntity={createEntity} />);
           })
         }
@@ -61,17 +62,18 @@ const mapStateToProps = state => {
     images.push({imgHash, thumbnail: state.settings.images[imgHash].thumbnail});
   });
   return {
-    images
+    images,
+    camera: state.game.camera
   }
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    createEntity: (imgHash) => {
+    createEntity: (imgHash, pos) => {
       dispatch({
         type: 'ENTITY_CREATE_REQUEST',
         data: [{
-          pos: {x: 100, y: 100},
+          pos,
           imgHash,
           selectedClientId: null
         }]

@@ -5,6 +5,12 @@ import EntitySprite from '../sprites/EntitySprite';
 import Camera from '../Camera';
 
 export default class extends Phaser.State {
+  init() {
+    this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+    this.game.world.setBounds(0, 0, Math.pow(2, 52), Math.pow(2, 52));
+    this.game.input.mouse.mouseWheelCallback = this.mouseWheel.bind(this);
+  }
+
   create () {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
@@ -37,13 +43,10 @@ export default class extends Phaser.State {
       _.forOwn(this.entities, entity => entity.updateEntity());
 
       this.group.sort();
-    });
-  }
 
-  init() {
-    this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-    this.game.world.setBounds(0, 0, 10000, 10000);
-    this.game.input.mouse.mouseWheelCallback = this.mouseWheel.bind(this);
+    });
+    this.cam.setPosition(this.game.store.getState().game.camera.x,
+      this.game.store.getState().game.camera.y);
   }
 
   getGameState() {
@@ -59,7 +62,6 @@ export default class extends Phaser.State {
   mouseWheel(event) {
     event.preventDefault();
     let direction;
-    const zoomSpeed = 0.1;
 
     if (this.game.input.mouse.wheelDelta === Phaser.Mouse.WHEEL_UP) {
       direction = 1;
@@ -67,13 +69,13 @@ export default class extends Phaser.State {
       direction = -1;
     }
 
-    this.cam.setScale(this.cam.getScale() + direction * 0.05);
+    this.cam.setScale(this.cam.getScale() * (1 + direction * 0.15));
   }
 
   updateCamera() {
     const time = this.game.time.elapsed;
     const scrollSpeed = 1;
-    const zoomSpeed = 0.01;
+    const zoomSpeed = 0.0012;
 
     const scrollKeys = [
       {key: Phaser.Keyboard.UP, y: -1, x: 0},
@@ -91,10 +93,9 @@ export default class extends Phaser.State {
     scrollKeys.forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
         if (value.zoom) {
-          this.cam.setScale(this.cam.getScale() + value.zoom * zoomSpeed);
+          this.cam.setScale(this.cam.getScale() * Math.pow(1 + value.zoom * zoomSpeed, time));
         } else {
-          this.cam.camera.x += value.x * time * scrollSpeed;
-          this.cam.camera.y += value.y * time * scrollSpeed;
+          this.cam.move(value.x * time * scrollSpeed, value.y * time * scrollSpeed);
         }
       }
     });

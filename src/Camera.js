@@ -1,25 +1,32 @@
+import _ from 'lodash';
+
 export default class Camera {
   constructor(camera, game) {
     this.camera = camera;
     this.game = game;
 
     this.zoomScale = 1;
+    this.zoomEndTime = null;
+
+    this.absoluteMinimum = 0.023;
+
+    this.dispatchCameraMove = _.throttle(data => {
+      this.dispatch('CAMERA_MOVE', data);
+    }, 500);
   }
 
   update() {
-    let zoomDir = null;
+    const zoomLeft = this.zoomScale - this.camera.scale.x;
 
-    if (this.camera.scale.x - this.zoomScale > 0.01) {
-      zoomDir = -1;
-    } else if (this.camera.scale.x - this.zoomScale < -0.01) {
-      zoomDir = 1;
-    }
-
-    if (zoomDir !== null) {
+    if (Math.abs(zoomLeft) > 0) {
+      const timeLeft  =  this.zoomEndTime - Date.now();
       const time = this.game.time.elapsed;
-      const zoomSpeed = 0.0006 * time;
-      const newScale = zoomSpeed * zoomDir;
-      this.zoomTo(newScale, this.getPointerX(), this.getPointerY());
+      let adjust = zoomLeft;
+      if (timeLeft > 10) {
+        adjust = time * zoomLeft / timeLeft;
+      }
+
+      this.zoomTo(adjust, this.getPointerX(), this.getPointerY());
     }
   }
 
@@ -27,6 +34,7 @@ export default class Camera {
     amount = Math.max(amount, this.getScaleMinLimit());
     amount = Math.min(amount, this.getScaleMaxLimit());
     this.zoomScale = amount;
+    this.zoomEndTime = Date.now() + 100;
   }
 
   getScale() {
@@ -43,11 +51,36 @@ export default class Camera {
 
   getScaleMinLimit() {
     return Math.max(this.game.width / this.game.world.bounds.width,
-    this.game.height / this.game.world.bounds.height);
+    this.game.height / this.game.world.bounds.height, this.absoluteMinimum);
   }
 
   getScaleMaxLimit() {
     return 2.5;
+  }
+
+  move(x, y) {
+    this.setPosition(this.camera.x + x, this.camera.y + y);
+  }
+
+  getCameraWidth() {
+    return this.game.width / this.camera.scale.x;
+  }
+
+  getCameraHeight() {
+    return this.game.height / this.camera.scale.y;
+  }
+
+  setPosition(x, y) {
+    this.camera.x = x;
+    this.camera.y = y;
+    this.dispatchCameraMove({
+      x: this.camera.x / this.camera.scale.x + this.getCameraWidth() / 2,
+      y: this.camera.y / this.camera.scale.y + this.getCameraHeight() / 2
+    });
+  }
+
+  dispatch(type, data) {
+    this.game.store.dispatch(type, data);
   }
 
   zoomTo(amount, x, y) {
@@ -74,13 +107,13 @@ export default class Camera {
     const newCameraXPointerDistance = (cameraXPointerDistance * newCameraWidth) / cameraWidth;
     const newCameraXBorderDistanceDiff = newCameraXPointerDistance - cameraXPointerDistance;
     const newCameraXPos = cameraXBorderDistance - newCameraXBorderDistanceDiff;
-    this.camera.x = newCameraXPos * this.camera.scale.x;
 
 
     const newCameraHeight = this.game.height / this.camera.scale.y;
     const newCameraYPointerDistance = (cameraYPointerDistance * newCameraHeight) / cameraHeight;
     const newCameraYBorderDistanceDiff = newCameraYPointerDistance - cameraYPointerDistance;
     const newCameraYPos = cameraYBorderDistance - newCameraYBorderDistanceDiff;
-    this.camera.y = newCameraYPos * this.camera.scale.y;
+
+    this.setPosition(newCameraXPos * this.camera.scale.x, newCameraYPos * this.camera.scale.y);
   }
 }
