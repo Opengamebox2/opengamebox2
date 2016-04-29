@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import {Button, FormControl, FormGroup, ControlLabel} from 'react-bootstrap';
+import {Button, FormControl, FormGroup, ControlLabel, ButtonGroup} from 'react-bootstrap';
 import {connect} from 'react-redux';
 import {reduxForm} from 'redux-form';
 import axios from 'axios';
@@ -22,15 +22,17 @@ let FavoritesAdd = ({
         <FormControl type="text" {...imgHash}
                      placeholder="QmWgeQPGVn2s9akWmxqzD9UHjNzvwjayrtG2bnH4F48Cc6" />
       </FormGroup>
-      <Button bsStyle="primary"
-          disabled={imgHash.error !== undefined}
-          onClick={() => { addFavorite(imgHash.value); }}>Create</Button>
-      <Button bsStyle="primary"
-              className="pull-right"
-              disabled={selectedEntities.length === 0}
-              onClick={() => { addFavorites(selectedEntities); }}>
-        Add selection
-      </Button>
+      <ButtonGroup>
+        <Button bsStyle="primary"
+            disabled={imgHash.error !== undefined}
+            onClick={() => { addFavorite(imgHash.value); }}>Create</Button>
+        <Button bsStyle="primary"
+                className="pull-right"
+                disabled={selectedEntities.length === 0}
+                onClick={() => { addFavorites(selectedEntities); }}>
+          Add selection
+        </Button>
+      </ButtonGroup>
     </div>
   );
 };

@@ -15,6 +15,16 @@ function settingsReducer(state = {
       return _.assign({}, state, {images});
     }
 
+    case 'FAVORITE_DELETE': {
+      const images = _.clone(state.images);
+      action.data.forEach(imgHash => {
+        if (images[imgHash]) {
+          delete images[imgHash];
+        }
+      });
+      return _.assign({}, state, {images});
+    }
+
     default:
       return state;
   }

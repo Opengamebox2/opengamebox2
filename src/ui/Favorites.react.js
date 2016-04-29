@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
-import {ListGroup, ListGroupItem, Button, Image, Row, Col} from 'react-bootstrap';
+import {ListGroup, ListGroupItem, Button, ButtonGroup, Image, Row, Col} from 'react-bootstrap';
 import {connect} from 'react-redux';
 import FavoritesAdd from './FavoritesAdd.react';
 
 const Favorite = ({
-  img, createEntity, camera
+  img, camera, createEntity, deleteFavorite
 }) => {
   return (
     <ListGroupItem>
@@ -15,9 +15,14 @@ const Favorite = ({
         </Col>
         <Col xs={9} className="extra_small">
           <p>{img.imgHash}</p>
+          <ButtonGroup>
           <Button bsStyle="primary" onClick={() => { createEntity(img.imgHash, {x: camera.x, y: camera.y}); }}>
             Create
           </Button>
+          <Button bsStyle="danger" onClick={() => { deleteFavorite(img.imgHash); }}>
+            Delete
+          </Button>
+          </ButtonGroup>
         </Col>
       </Row>
     </ListGroupItem>
@@ -25,7 +30,7 @@ const Favorite = ({
 };
 
 const Favorites = ({
-  createEntity, images, camera
+  createEntity, deleteFavorite, images, camera
 }) => {
   let favoriteTxt;
   if (images.length === 0) {
@@ -48,6 +53,7 @@ const Favorites = ({
             return (<Favorite key={img.imgHash}
                               img={img}
                               camera={camera}
+                              deleteFavorite={deleteFavorite}
                               createEntity={createEntity} />);
           })
         }
@@ -77,6 +83,12 @@ const mapDispatchToProps = (dispatch) => {
           imgHash,
           selectedClientId: null
         }]
+      });
+    },
+    deleteFavorite: imgHash => {
+      dispatch({
+        type: 'FAVORITE_DELETE',
+        data: [imgHash]
       });
     }
   };
