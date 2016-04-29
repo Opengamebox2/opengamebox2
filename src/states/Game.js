@@ -107,7 +107,7 @@ export default class extends Phaser.State {
       case 46: {
         const selection = _(this.entities)
                           .map(x => x.entity)
-                          .pickBy({selectedClientId: this.getGameState().clientId})
+                          .pickBy({selectedClientId: this.getGameState().player.clientId})
                           .values()
                           .map(entity => { return {id: entity.id}; })
                           .value();

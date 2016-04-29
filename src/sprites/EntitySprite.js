@@ -27,7 +27,7 @@ export default class extends Phaser.Sprite {
   initEventListeners() {
     this.events.onInputDown.add((entitySprite, pointer) => {
       const selectedClientId = entitySprite.entity.selectedClientId;
-      if (selectedClientId === null || selectedClientId === this.game.store.getState().game.clientId) {
+      if (selectedClientId === null || selectedClientId === this.game.store.getState().game.player.clientId) {
         if (this.tween) {
           this.tween.stop();
         }
@@ -76,7 +76,7 @@ export default class extends Phaser.Sprite {
       }
 
       if (newEntity.selectedClientId !== this.entity.selectedClientId) {
-        if (newEntity.selectedClientId === gameState.clientId) {
+        if (newEntity.selectedClientId === gameState.player.clientId) {
           this.input.enableDrag();
           if (this.pointerDown) {
             this.x += this.pointerDown.pointer.x - this.pointerDown.x;

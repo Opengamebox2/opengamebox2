@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 import {Button, FormControl, FormGroup, ControlLabel} from 'react-bootstrap';
 import {connect} from 'react-redux';
@@ -6,9 +7,14 @@ import axios from 'axios';
 const ipfsGateway = 'https://gateway.ipfs.io/ipfs';
 
 let FavoritesAdd = ({
-  addFavorite, fields
+  addFavorite, fields, selectedEntities
 }) => {
   const {imgHash} = fields;
+  const addFavorites = () => {
+    selectedEntities.forEach(entity => {
+      addFavorite(entity.imgHash);
+    });
+  };
   return (
     <div>
       <FormGroup>
@@ -19,6 +25,12 @@ let FavoritesAdd = ({
       <Button bsStyle="primary"
           disabled={imgHash.error !== undefined}
           onClick={() => { addFavorite(imgHash.value); }}>Create</Button>
+      <Button bsStyle="primary"
+              className="pull-right"
+              disabled={selectedEntities.length === 0}
+              onClick={() => { addFavorites(selectedEntities); }}>
+        Add selection
+      </Button>
     </div>
   );
 };
@@ -37,7 +49,17 @@ FavoritesAdd = reduxForm({
   validate
 })(FavoritesAdd);
 
-const mapStateToProps = () => { return {}; };
+const mapStateToProps = (state) => {
+  const selectedEntities = state.game.player.selectedEntities
+    .filter(entityId => {
+      const entity = state.game.entities[entityId];
+      return !state.settings.images[entity.imgHash];
+    })
+    .map(entityId => state.game.entities[entityId]);
+  return {
+    selectedEntities
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
@@ -45,7 +67,6 @@ const mapDispatchToProps = dispatch => {
       axios.get(`${ipfsGateway}/${imgHash}`, {
         responseType: 'blob'
       }).then(response => {
-        console.log(response);
         const reader  = new FileReader();
         reader.onloadend = () => {
           dispatch({
