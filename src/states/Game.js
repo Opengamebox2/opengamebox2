@@ -99,6 +99,21 @@ export default class extends Phaser.State {
         }
       }
     });
+
+    const ap = this.input.activePointer;
+    if (ap.isDown && ap.button === 1) {
+      if (this.lastActivePointer && this.lastActivePointer.timeDown === ap.timeDown) {
+        const amountX = this.lastActivePointer.x - ap.x;
+        const amountY = this.lastActivePointer.y - ap.y;
+        this.cam.move(amountX, amountY);
+      }
+
+      this.lastActivePointer = {
+        x: ap.x,
+        y: ap.y,
+        timeDown: ap.timeDown,
+      }
+    }
   }
 
   addInputCallbacks() {
