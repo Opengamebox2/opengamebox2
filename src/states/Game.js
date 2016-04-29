@@ -101,7 +101,7 @@ export default class extends Phaser.State {
     });
 
     const ap = this.input.activePointer;
-    if (ap.isDown && ap.button === 1) {
+    if (ap.middleButton.isDown) {
       if (this.lastActivePointer && this.lastActivePointer.timeDown === ap.timeDown) {
         const amountX = this.lastActivePointer.x - ap.x;
         const amountY = this.lastActivePointer.y - ap.y;
