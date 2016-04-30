@@ -77,25 +77,29 @@ export default class extends Phaser.State {
     const scrollSpeed = 1;
     const zoomSpeed = 0.0012;
 
-    const scrollKeys = [
-      {key: Phaser.Keyboard.UP, y: -1, x: 0},
-      {key: Phaser.Keyboard.RIGHT, y: 0, x: 1},
-      {key: Phaser.Keyboard.DOWN, y: 1, x: 0},
-      {key: Phaser.Keyboard.LEFT, y: 0, x: -1},
-      {key: Phaser.Keyboard.W, y: -1, x: 0},
-      {key: Phaser.Keyboard.D, y: 0, x: 1},
-      {key: Phaser.Keyboard.S, y: 1, x: 0},
-      {key: Phaser.Keyboard.A, y: 0, x: -1},
-      {key: Phaser.Keyboard.Q, zoom: 1},
-      {key: Phaser.Keyboard.E, zoom: -1},
-    ];
+    [
+      {key: Phaser.Keyboard.LEFT,  x: -1},
+      {key: Phaser.Keyboard.RIGHT, x: 1},
+      {key: Phaser.Keyboard.UP,    y: -1},
+      {key: Phaser.Keyboard.DOWN,  y: 1},
 
-    scrollKeys.forEach(value => {
+      {key: Phaser.Keyboard.A,     x: -1},
+      {key: Phaser.Keyboard.D,     x: 1},
+      {key: Phaser.Keyboard.W,     y: -1},
+      {key: Phaser.Keyboard.S,     y: 1},
+
+      {key: Phaser.Keyboard.E,     zoom: -1},
+      {key: Phaser.Keyboard.Q,     zoom: 1},
+    ].forEach(value => {
       if (this.input.keyboard.isDown(value.key)) {
+        if (value.x || value.y) {
+          this.cam.move(_.get(value, 'x', 0) * time * scrollSpeed,
+                        _.get(value, 'y', 0) * time * scrollSpeed);
+        }
+
         if (value.zoom) {
-          this.cam.setScale(this.cam.getScale() * Math.pow(1 + value.zoom * zoomSpeed, time));
-        } else {
-          this.cam.move(value.x * time * scrollSpeed, value.y * time * scrollSpeed);
+          const factor = Math.pow(1 + value.zoom * zoomSpeed, time);
+          this.cam.setScale(this.cam.getScale() * factor);
         }
       }
     });
