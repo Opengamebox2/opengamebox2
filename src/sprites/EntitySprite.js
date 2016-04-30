@@ -26,16 +26,18 @@ export default class extends Phaser.Sprite {
 
   initEventListeners() {
     this.events.onInputDown.add((entitySprite, pointer) => {
-      const selectedClientId = entitySprite.entity.selectedClientId;
-      if (selectedClientId === null || selectedClientId === this.game.store.getState().game.player.clientId) {
-        if (this.tween) {
-          this.tween.stop();
+      if (pointer.button === 0) {
+        const selectedClientId = entitySprite.entity.selectedClientId;
+        if (selectedClientId === null || selectedClientId === this.game.store.getState().game.player.clientId) {
+          if (this.tween) {
+            this.tween.stop();
+          }
+          this.pointerDown = {pointer, x: pointer.x, y: pointer.y};
         }
-        this.pointerDown = {pointer, x: pointer.x, y: pointer.y};
-      }
 
-      if (selectedClientId === null) {
-        this.onSelectRequest({id: entitySprite.entity.id});
+        if (selectedClientId === null) {
+          this.onSelectRequest({id: entitySprite.entity.id});
+        }
       }
     }, this);
 
@@ -55,6 +57,11 @@ export default class extends Phaser.Sprite {
     });
 
     this.events.onDragUpdate.add((entitySprite, pointer, x, y) => {
+      if (pointer.button !== 0) {
+        entitySprite.input.stopDrag(pointer);
+        return;
+      }
+
       const pos = entitySprite.game.input.getLocalPosition(entitySprite.parent, pointer);
       const dragOffset = entitySprite.dragOffset || {x: 0, y: 0};
       entitySprite.x = pos.x + dragOffset.x;
