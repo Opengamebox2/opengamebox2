@@ -117,6 +117,8 @@ export default class extends Phaser.State {
   }
 
   addInputCallbacks() {
+    this.game.canvas.oncontextmenu = e => { e.preventDefault(); };
+
     this.input.keyboard.onDownCallback = event => {
       switch (event.keyCode) {
       case 46: {
