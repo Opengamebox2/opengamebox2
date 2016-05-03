@@ -47,6 +47,16 @@ export default class extends Phaser.State {
     });
     this.cam.setPosition(this.game.store.getState().game.camera.x,
       this.game.store.getState().game.camera.y);
+
+    this.game.input.onTap.add(pointer => {
+      if (!this.overlapsEntity(pointer)) {
+        this.game.store.dispatch('ENTITY_SELECT_REQUEST', []);
+      }
+    });
+  }
+
+  overlapsEntity(pointer) {
+    return _.some(this.entities, x => x.getBounds().contains(pointer.x, pointer.y));
   }
 
   getGameState() {
