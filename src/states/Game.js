@@ -43,8 +43,8 @@ export default class extends Phaser.State {
       _.forOwn(this.entities, entity => entity.updateEntity());
 
       this.group.sort();
-
     });
+
     this.cam.setPosition(this.game.store.getState().game.camera.x,
       this.game.store.getState().game.camera.y);
 
@@ -67,7 +67,6 @@ export default class extends Phaser.State {
     this.updateCamera();
     this.cam.update();
   }
-
 
   mouseWheel(event) {
     event.preventDefault();
