@@ -26,7 +26,7 @@ body {
   top: 0;
   right: 0;
   padding: 0 0.5rem 0 1rem;
-  background-color: #222222;
+  background-color: var(--background_color);
   height: 100%;
   opacity: 0;
   width: var(--menu-width-normal);

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import bootstrap from '../../assets/css/bootstrap.min.css';
+import opengameboxcss from '../../assets/css/opengamebox.css';
 
 import StartDialog from './StartDialog.react';
 
