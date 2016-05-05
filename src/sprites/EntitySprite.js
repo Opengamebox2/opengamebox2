@@ -3,13 +3,15 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.Sprite {
 
-  constructor ({entity, game}) {
+  constructor ({entity, game, entities}) {
     super(game, entity.pos.x, entity.pos.y, 'mushroom');
 
     this.game = game;
     this.anchor.setTo(0.5);
     this.entity = {id: entity.id};
     this.inputEnabled = true;
+
+    this.entityList = entities;
 
     this.pointerDown = null;
     this.tween = null;
@@ -25,6 +27,29 @@ export default class extends Phaser.Sprite {
 
     this.initEventListeners();
     this.updateEntity();
+
+    this.dragStartPos = {x: 0, y: 0};
+    this.dragingObjects = [];
+    this.selectRequestObjects = [];
+  }
+
+  selectEntities() {
+    let sortedEntities = _.sortBy(this.entityList, function(entity) { return entity.entity.z;});
+    let selectedEntities = [];
+    let foundThis = false;
+    sortedEntities.forEach((entity, index, array) => {
+      if (!foundThis) {
+        if (entity.entity.id === this.entity.id) {
+          foundThis = true;
+        }
+        return;
+      }
+      if (this.overlap(entity)) {
+        selectedEntities.push(entity);
+        selectedEntities.concat(entity.selectEntities());
+      }
+    })
+    return selectedEntities;
   }
 
   initEventListeners() {
@@ -39,7 +64,14 @@ export default class extends Phaser.Sprite {
         }
 
         if (selectedClientId === null) {
-          this.onSelectRequest({id: entitySprite.entity.id});
+          let selectedEntities = []
+          if (entitySprite.game.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
+            selectedEntities = [this].concat(entitySprite.selectEntities());
+          } else {
+            selectedEntities = [this]
+          }
+          entitySprite.game.store.dispatch('ENTITY_SELECT_REQUEST', _.map(_.sortBy(selectedEntities, function(entity) { return entity.entity.depth;}), 'entity'));
+          this.selectRequestObjects = selectedEntities;
         }
       }
     }, this);
@@ -48,32 +80,82 @@ export default class extends Phaser.Sprite {
       this.pointerDown = null;
     }, this);
 
-    this.events.onDragStop.add(entitySprite => {
-      const x = entitySprite.x;
-      const y = entitySprite.y;
-      this.onMoveRequest({id: entitySprite.entity.id, pos: {x, y}});
+    this.events.onDragStop.add((entitySprite) => {
+      let dragDistance = {x: entitySprite.x - entitySprite.dragStartPos.x, y: entitySprite.y - entitySprite.dragStartPos.y};
+      let dragedEntities = [entitySprite];
+      _.forOwn(entitySprite.entityList, (entity) => {
+        if (entity.entity.selectedClientId !== entitySprite.game.store.getState().game.player.clientId) {
+          return;
+        }
+        if (entitySprite.entity.id === entity.entity.id) {
+          return;
+        }
+        dragedEntities.push(entity);
+      });
+
+      dragedEntities = _.sortBy(dragedEntities, function(entity) { return entity.entity.depth;});
+      let entitiesToMove = [];
+
+      _.forOwn(dragedEntities, (entity) => {
+        entitiesToMove.push({
+          id: entity.entity.id,
+          pos: {
+            x: entity.entity.pos.x + dragDistance.x,
+            y: entity.entity.pos.y + dragDistance.y,
+          },
+        });
+      });
       entitySprite.dragOffset = null;
+      this.game.store.dispatch('ENTITY_MOVE_REQUEST', entitiesToMove);
+      entitySprite.dragStartPos = {x: 0, y: 0};
+      entitySprite.dragingObjects = [];
+      entitySprite.selectRequestObjects = [];
     }, this);
 
     this.events.onDragStart.add((entitySprite, pointer, x, y) => {
       entitySprite.dragOffset = {x: x - entitySprite.x, y: y - entitySprite.y};
-      entitySprite.updateDragPosition(pointer);
+      entitySprite.dragStartPos = {x: entitySprite.entity.pos.x, y: entitySprite.entity.pos.y};
+      entitySprite.dragingObjects = [];
+      
+      if (entitySprite.game.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
+        entitySprite.dragingObjects = entitySprite.selectEntities();
+      } else {
+        entitySprite.dragingObjects = entitySprite.selectRequestObjects;
+        if (entitySprite.dragingObjects.length === 0) {
+          _.forOwn(entitySprite.entityList, (entity, id) => {
+            if (entitySprite.entity.id !== entity.entity.id) {
+              if (entity.entity.selectedClientId === entitySprite.game.store.getState().game.player.clientId) {
+                if (!entitySprite.entityList[id].input.isDragged) {
+                  entitySprite.dragingObjects.push(entity);
+                }
+              }
+            }
+          });
+        }
+      }
+      entitySprite.updateDragPosition(pointer, x, y);
     });
 
     this.events.onDragUpdate.add((entitySprite, pointer, x, y) => {
       if (pointer.button !== 0) {
         entitySprite.input.stopDrag(pointer);
-      } else {
-        entitySprite.updateDragPosition(pointer);
+        return;
       }
+      entitySprite.updateDragPosition(pointer, x, y);
     }, this);
   }
 
-  updateDragPosition(pointer) {
+  updateDragPosition(pointer, x, y) {
     const pos = this.game.input.getLocalPosition(this.parent, pointer);
     const dragOffset = this.dragOffset || {x: 0, y: 0};
     this.x = pos.x + dragOffset.x;
     this.y = pos.y + dragOffset.y;
+
+    let dragDistance = {x: this.x - this.dragStartPos.x, y: this.y - this.dragStartPos.y};
+    this.dragingObjects.forEach(entity => {
+      entity.x = dragDistance.x + entity.entity.pos.x;
+      entity.y = dragDistance.y + entity.entity.pos.y;
+    });
   }
 
   update() {}

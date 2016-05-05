@@ -234,6 +234,7 @@ export default class extends Phaser.State {
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
+      entities: this.entities,
     });
 
     entitySprite.onSelectRequest = entity => {
@@ -241,7 +242,15 @@ export default class extends Phaser.State {
     };
 
     entitySprite.onMoveRequest = entity => {
-      this.game.store.dispatch('ENTITY_MOVE_REQUEST', [entity]);
+      let entitiesToMove = [];
+      this.game.store.getState().game.player.selectedEntities.forEach((id, index, array) => {
+        entitiesToMove.push({
+          id,
+          pos: this.entities[id].entity.pos,
+        });
+      })
+      
+      this.game.store.dispatch('ENTITY_MOVE_REQUEST', entitiesToMove);
     };
 
     this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);
