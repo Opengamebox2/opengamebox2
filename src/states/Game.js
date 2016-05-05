@@ -17,6 +17,11 @@ export default class extends Phaser.State {
     this.assetLoader = new AssetLoader(this.game);
     this.entities = {};
     this.cam = new Camera(this.camera, this.game);
+    this.cam.onScaleChange = () => {
+      _.forOwn(this.entities, entity => {
+        entity.onScaleChange();
+      });
+    };
 
     this.game.stage.disableVisibilityChange = true;
     this.group = this.game.add.group();
@@ -44,7 +49,18 @@ export default class extends Phaser.State {
 
       _.forOwn(this.entities, entity => entity.updateEntity());
 
-      this.group.sort();
+      this.group.customSort((a, b) => {
+        if (!a.entity || !b.entity) {
+          return 0;
+        }
+        if (a.entity.depth > b.entity.depth) {
+          return 1;
+        } else if (a.entity.depth < b.entity.depth) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
     });
 
     this.cam.setPosition(this.game.store.getState().game.camera.x,

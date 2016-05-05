@@ -5,6 +5,7 @@ import MenuController from './MenuController.react';
 import PlayerList from './PlayerList.react';
 import Favorites from './Favorites.react';
 import Chat from './chat/Chat.react';
+import GameControls from './gamecontrols/GameControls.react';
 
 const Menu = ({menuVisible, children}) => {
   let classNames = "menu_view";
@@ -18,6 +19,7 @@ const Menu = ({menuVisible, children}) => {
         <MenuController visibleWhenClosed={false} />
         <Tabs defaultActiveKey={1} id="menu-tabs">
           <Tab eventKey={1} title="Players">
+            <GameControls />
             <PlayerList />
             <Chat />
           </Tab>
