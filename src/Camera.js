@@ -13,6 +13,8 @@ export default class Camera {
     this.dispatchCameraMove = _.throttle(data => {
       this.dispatch('CAMERA_MOVE', data);
     }, 500);
+
+    this.onScaleChange = () => {};
   }
 
   update() {
@@ -27,6 +29,7 @@ export default class Camera {
       }
 
       this.zoomTo(adjust, this.getPointerX(), this.getPointerY());
+      this.onScaleChange();
     }
   }
 

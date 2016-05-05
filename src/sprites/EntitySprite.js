@@ -20,6 +20,9 @@ export default class extends Phaser.Sprite {
     this.effect = new Phaser.Graphics(this.game, 0, 0);
     this.addChild(this.effect);
 
+    this.effectFrozen = new Phaser.Graphics(this.game, 0, 0);
+    this.addChild(this.effectFrozen);
+
     // callbacks set by caller
     this.onDeleteRequest = () => {};
     this.onSelectRequest = () => {};
@@ -91,6 +94,7 @@ export default class extends Phaser.Sprite {
       .filter(x => x.entity.id !== entitySprite.entity.id)
       .filter(x => x.entity.selectedClientId === entitySprite.game.store.getState().game.player.clientId)
       .filter(x => !x.input.isDragged)
+      .filter(x => !x.entity.frozen)
       .value();
 
       entitySprite.updateDragPosition(pointer, x, y);
@@ -138,8 +142,10 @@ export default class extends Phaser.Sprite {
         this.tween.start();
       }
 
-      if (this.entity.selectedClientId !== oldEntity.selectedClientId) {
-        if (this.entity.selectedClientId === gameState.player.clientId) {
+      if (this.entity.selectedClientId !== oldEntity.selectedClientId
+            || this.entity.frozen !== oldEntity.frozen) {
+        if (this.entity.selectedClientId === gameState.player.clientId
+              && !this.entity.frozen) {
           this.input.enableDrag();
           if (this.pointerDown) {
             this.x += this.pointerDown.pointer.x - this.pointerDown.x;
@@ -153,7 +159,13 @@ export default class extends Phaser.Sprite {
         borderNeedsUpdate = true;
       }
 
-      this.z = this.entity.depth;
+      if (this.entity.frozen !== oldEntity.frozen) {
+        this.drawFrozen();
+      }
+
+      if (this.entity.depth !== oldEntity.depth) {
+        this.z = this.entity.depth;
+      }
     }
 
     if (this.players !== gameState.players) {
@@ -164,6 +176,11 @@ export default class extends Phaser.Sprite {
     if (borderNeedsUpdate) {
       this.drawBorder();
     }
+  }
+
+  onScaleChange() {
+    this.drawBorder();
+    this.drawFrozen();
   }
 
   drawBorder() {
@@ -185,6 +202,27 @@ export default class extends Phaser.Sprite {
         this.width + borderWidth,
         this.height + borderWidth
       );
+    }
+  }
+
+  drawFrozen() {
+    this.effectFrozen.clear();
+
+    if (this.entity.frozen) {
+      const lineWidth = 3 / this.game.camera.scale.x;
+      const color = '0xcccccc';
+      this.effectFrozen.lineStyle(lineWidth, color, 1);
+      const corners = [
+        {x: -1, y: -1 },
+        {x: 1, y: -1 },
+        {x: 1, y: 1 },
+        {x: -1, y: 1 }
+      ];
+      corners.forEach(corner => {
+        this.effectFrozen.moveTo(corner.x * this.width / 2, corner.y * this.height / 2);
+        this.effectFrozen.lineTo(corner.x * (this.width / 2 + this.width / 15), corner.y * (this.height / 2 + this.height / 15));
+      });
+
     }
   }
 }
