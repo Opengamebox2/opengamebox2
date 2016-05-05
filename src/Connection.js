@@ -6,7 +6,8 @@ import uuid from 'uuid';
 export default class Connection {
   constructor(store) {
     store.on('CONNECT', () => {
-      this.socket = io(`http://${window.location.hostname}:8000`);
+      const url = process.env.SERVER_ADDR ? process.env.SERVER_ADDR : `http://${window.location.hostname}:8000`;
+      this.socket = io(url);
 
       this.socket.on('connect', () => {
         console.log('Connected to the server!');
