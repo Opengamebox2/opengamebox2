@@ -57,7 +57,8 @@ module.exports = {
     new ExtractTextPlugin("assets/css/opengamebox.css"),
     new webpack.DefinePlugin({
       "process.env": {
-        NODE_ENV: JSON.stringify("production")
+        NODE_ENV: JSON.stringify("production"),
+        SERVER_ADDR: JSON.stringify(process.env.SERVER_ADDR),
       }
     }),
     new CopyWebpackPlugin([

@@ -32,6 +32,11 @@ module.exports = {
   watch: true,
   plugins: [
     definePlugin,
+    new webpack.DefinePlugin({
+      "process.env": {
+        SERVER_ADDR: JSON.stringify(process.env.SERVER_ADDR),
+      }
+    }),
     new webpack.HotModuleReplacementPlugin(), // Make hot loading work
     new HtmlWebpackPlugin({
       template: 'index.html', // Move the index.html file...
