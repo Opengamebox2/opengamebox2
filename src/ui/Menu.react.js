@@ -4,6 +4,7 @@ import {Tabs, Tab} from 'react-bootstrap';
 import MenuController from './MenuController.react';
 import PlayerList from './PlayerList.react';
 import Favorites from './Favorites.react';
+import Chat from './chat/Chat.react';
 
 const Menu = ({menuVisible, children}) => {
   let classNames = "menu_view";
@@ -18,6 +19,7 @@ const Menu = ({menuVisible, children}) => {
         <Tabs defaultActiveKey={1} id="menu-tabs">
           <Tab eventKey={1} title="Players">
             <PlayerList />
+            <Chat />
           </Tab>
           <Tab eventKey={2} title="Favorites">
             <Favorites />

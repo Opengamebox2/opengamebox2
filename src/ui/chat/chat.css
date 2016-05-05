@@ -1,0 +1,36 @@
+.chat__container {
+  box-sizing: border-box;
+}
+
+.chat_messages__container {
+  height: 15.5rem;
+  margin-top: 1rem;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  border-top: 1px solid #2e2e2e;
+  border-left: 1px solid #2e2e2e;
+  border-radius: 2px;
+  padding: 0.5rem;
+}
+
+.chat_messages__row {
+}
+
+.chat_messages__time {
+  font-size: 1rem;
+  color: #0ce3ac;
+  opacity: 0.5;
+}
+
+.chat_messages__author {
+  padding-left: 0.5rem;
+  color: #222222;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.chat_messages__content {
+  padding-left: 0.5rem;
+  font-size: 1.5rem;
+}

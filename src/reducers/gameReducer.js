@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import entitiesReducer from './entitiesReducer';
 import playersReducer from './playersReducer';
 import cameraReducer from './cameraReducer';
+import chatReducer from './chatReducer';
 
 function playerReducer(state = {selectedEntities: []}, action) {
   switch (action.type) {
@@ -29,6 +30,7 @@ const gameReducer = combineReducers({
   players: playersReducer,
   camera: cameraReducer,
   player: playerReducer,
+  chat: chatReducer,
 });
 
 export default gameReducer;
