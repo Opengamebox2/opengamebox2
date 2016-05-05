@@ -4,6 +4,8 @@ import AssetLoader from '../AssetLoader';
 import EntitySprite from '../sprites/EntitySprite';
 import Camera from '../Camera';
 
+const LEFT_BUTTON = 0;
+
 export default class extends Phaser.State {
   init() {
     this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
@@ -48,11 +50,45 @@ export default class extends Phaser.State {
     this.cam.setPosition(this.game.store.getState().game.camera.x,
       this.game.store.getState().game.camera.y);
 
-    this.game.input.onTap.add(pointer => {
-      if (!this.overlapsEntity(pointer)) {
-        this.game.store.dispatch('ENTITY_SELECT_REQUEST', []);
+    this.game.input.onDown.add(pointer => {
+      if (pointer.button === LEFT_BUTTON && !this.overlapsEntity(pointer)) {
+        const x = this.cam.getPointerX();
+        const y = this.cam.getPointerY();
+        this.boxSelect.startPos = {x, y};
+        this.boxSelect.rectangle.setTo(x, y, 0, 0);
+        this.boxSelect.graphics.x = x;
+        this.boxSelect.graphics.y = y;
       }
     });
+
+    this.game.input.onUp.add(pointer => {
+      if (pointer.button === LEFT_BUTTON && this.boxSelect.startPos) {
+        let entities = _(this.entities)
+          .filter(e => {
+            const left = e.position.x - e.width / 2;
+            const right = e.position.x + e.width / 2;
+            const top = e.position.y - e.height / 2;
+            const bottom = e.position.y + e.height / 2;
+            return this.boxSelect.rectangle.intersectsRaw(left, right, top, bottom);
+          })
+          .sortBy(e => e.entity.depth)
+          .map(e => { return {id: e.entity.id}; })
+          .value();
+
+        this.game.store.dispatch('ENTITY_SELECT_REQUEST', entities);
+
+        this.boxSelect.startPos = null;
+        this.boxSelect.rectangle.setTo(0,0,0,0);
+        this.boxSelect.graphics.clear();
+      }
+    });
+
+    this.boxSelect = {
+      startPos: null,
+      rectangle: new Phaser.Rectangle(0, 0, 0, 0),
+      graphics: new Phaser.Graphics(this.game, 0, 0)
+    };
+    this.group.add(this.boxSelect.graphics);
   }
 
   overlapsEntity(pointer) {
@@ -66,6 +102,50 @@ export default class extends Phaser.State {
   update() {
     this.updateCamera();
     this.cam.update();
+    this.updateBoxSelect();
+  }
+
+  render() {
+    this.renderBoxSelect();
+  }
+
+  renderBoxSelect() {
+    if (this.boxSelect.startPos) {
+      const rect = this.boxSelect.rectangle;
+      const graphics = this.boxSelect.graphics;
+      const xDir = rect.x < this.boxSelect.startPos.x ? -1 : 1;
+      const yDir = rect.y < this.boxSelect.startPos.y ? -1 : 1;
+      const borderWidth = 2;
+
+      graphics.clear();
+
+      graphics.beginFill('0x000000', 0.3);
+      graphics.drawRect(
+        xDir * -borderWidth,
+        yDir * -borderWidth,
+        xDir * rect.width + xDir * borderWidth * 2,
+        yDir * rect.height + yDir * borderWidth * 2);
+      graphics.endFill();
+
+      graphics.beginFill('0xffffff', 0.3);
+      graphics.drawRect(0, 0, xDir * rect.width, yDir * rect.height);
+      graphics.endFill();
+    }
+  }
+
+  updateBoxSelect() {
+    if (this.boxSelect.startPos) {
+      const startPos = this.boxSelect.startPos;
+      const x = this.cam.getPointerX();
+      const y = this.cam.getPointerY();
+
+      this.boxSelect.rectangle.setTo(
+        Math.min(x, startPos.x),
+        Math.min(y, startPos.y),
+        Math.abs(x - startPos.x),
+        Math.abs(y - startPos.y)
+      );
+    }
   }
 
   mouseWheel(event) {
