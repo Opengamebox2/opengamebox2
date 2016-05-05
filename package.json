@@ -5,7 +5,7 @@
   "author": "Opengamebox2",
   "main": "index.js",
   "scripts": {
-    "dev": "node server.dev.js",
+    "start": "node server.dev.js",
     "deploy": "webpack --config webpack.production.config.js",
     "test": "standard"
   },
