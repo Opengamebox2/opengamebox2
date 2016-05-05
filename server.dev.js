@@ -15,11 +15,11 @@ new WebpackDevServer(webpack(config), { // Start a server
     index: config.output.publicPath
   },
   quiet: true // Without logging
-}).listen(8080, 'localhost', function (err, result) {
+}).listen(3100, 'localhost', function (err, result) {
   if (err) {
     console.log(err);
   } else {
     console.log('Server started');
-    console.log('Listening at localhost:8080');
+    console.log('Listening at localhost:3100');
   }
 });
