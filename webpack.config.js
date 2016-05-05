@@ -17,7 +17,7 @@ module.exports = {
   entry: {
     app: [
       'babel-polyfill',
-      'webpack-dev-server/client?http://localhost:8080', // Needed for hot reloading
+      'webpack-dev-server/client?http://localhost:3100', // Needed for hot reloading
       'webpack/hot/only-dev-server', // See above
       path.resolve(__dirname, 'src/main.js')
     ]
@@ -42,7 +42,7 @@ module.exports = {
       port: process.env.PORT || 3000,
       ghostMode: false,
       open: false,
-      proxy: 'http://localhost:8080'
+      proxy: 'http://localhost:3100'
     }),
   ],
   module: {
