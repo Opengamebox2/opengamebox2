@@ -80,17 +80,18 @@ export default class extends Phaser.Sprite {
 
   updateEntity() {
     const gameState = this.game.store.getState().game;
-    const newEntity = gameState.entities[this.entity.id];
+    const oldEntity = this.entity;
+    this.entity = gameState.entities[this.entity.id];
     let borderNeedsUpdate = false;
 
-    if (newEntity !== this.entity) {
-      if (newEntity.pos !== this.entity.pos) {
-        this.tween = this.game.add.tween(this).to(newEntity.pos, 300);
+    if (this.entity !== oldEntity) {
+      if (this.entity.pos !== oldEntity.pos) {
+        this.tween = this.game.add.tween(this).to(this.entity.pos, 300);
         this.tween.start();
       }
 
-      if (newEntity.selectedClientId !== this.entity.selectedClientId) {
-        if (newEntity.selectedClientId === gameState.player.clientId) {
+      if (this.entity.selectedClientId !== oldEntity.selectedClientId) {
+        if (this.entity.selectedClientId === gameState.player.clientId) {
           this.input.enableDrag();
           if (this.pointerDown) {
             this.x += this.pointerDown.pointer.x - this.pointerDown.x;
@@ -104,8 +105,7 @@ export default class extends Phaser.Sprite {
         borderNeedsUpdate = true;
       }
 
-      this.z = newEntity.depth;
-      this.entity = newEntity;
+      this.z = this.entity.depth;
     }
 
     if (this.players !== gameState.players) {
