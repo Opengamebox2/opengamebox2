@@ -15,6 +15,9 @@ export default class extends Phaser.Sprite {
     this.tween = null;
     this.players = null;
 
+    this.effect = new Phaser.Graphics(this.game, 0, 0);
+    this.addChild(this.effect);
+
     // callbacks set by caller
     this.onDeleteRequest = () => {};
     this.onSelectRequest = () => {};
@@ -78,7 +81,7 @@ export default class extends Phaser.Sprite {
   updateEntity() {
     const gameState = this.game.store.getState().game;
     const newEntity = gameState.entities[this.entity.id];
-    let colorNeedsUpdate = false;
+    let borderNeedsUpdate = false;
 
     if (newEntity !== this.entity) {
       if (newEntity.pos !== this.entity.pos) {
@@ -98,7 +101,7 @@ export default class extends Phaser.Sprite {
           this.input.disableDrag();
         }
 
-        colorNeedsUpdate = true;
+        borderNeedsUpdate = true;
       }
 
       this.z = newEntity.depth;
@@ -107,24 +110,33 @@ export default class extends Phaser.Sprite {
 
     if (this.players !== gameState.players) {
       this.players = gameState.players;
-      colorNeedsUpdate = true;
+      borderNeedsUpdate = true;
     }
 
-    if (colorNeedsUpdate) {
-      this.updateColor();
+    if (borderNeedsUpdate) {
+      this.drawBorder();
     }
   }
 
-  updateColor() {
+  drawBorder() {
+    this.effect.clear();
+
     if (this.entity.selectedClientId !== null) {
       const player = this.game.store.getState().game.players[this.entity.selectedClientId];
+
+      let color = '0xcccccc';
       if (player) {
-        this.tint = Phaser.Color.HSLtoRGB(player.hue, 1.0, 0.9).color;
-      } else {
-        this.tint = 0xcccccc;
+        color = Phaser.Color.HSLtoRGB(player.hue, 1.0, 0.5).color;
       }
-    } else {
-      this.tint = 0xffffff;
+
+      const borderWidth = 4 / this.game.camera.scale.x;
+      this.effect.lineStyle(borderWidth, color, 1);
+      this.effect.drawRect(
+        -this.width / 2 - borderWidth / 2,
+        -this.height / 2 - borderWidth / 2,
+        this.width + borderWidth,
+        this.height + borderWidth
+      );
     }
   }
 }
