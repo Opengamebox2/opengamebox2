@@ -234,14 +234,11 @@ export default class extends Phaser.State {
     let entitySprite = new EntitySprite({
       entity,
       game: this.state.game,
+      entities: this.entities,
     });
 
     entitySprite.onSelectRequest = entity => {
       this.game.store.dispatch('ENTITY_SELECT_REQUEST', [entity]);
-    };
-
-    entitySprite.onMoveRequest = entity => {
-      this.game.store.dispatch('ENTITY_MOVE_REQUEST', [entity]);
     };
 
     this.assetLoader.loadEntitySprite(entitySprite, entity.imgHash);
