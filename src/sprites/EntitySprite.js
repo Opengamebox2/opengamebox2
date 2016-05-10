@@ -20,15 +20,12 @@ export default class extends Phaser.Sprite {
     this.effect = new Phaser.Graphics(this.game, 0, 0);
     this.addChild(this.effect);
 
-    // callbacks set by caller
-    this.onDeleteRequest = () => {};
-    this.onSelectRequest = () => {};
-
     this.initEventListeners();
     this.updateEntity();
 
     this.dragStartPos = {x: 0, y: 0};
     this.draggingObjects = [];
+    this.localSelection = [];
   }
 
   initEventListeners() {
@@ -43,7 +40,18 @@ export default class extends Phaser.Sprite {
         }
 
         if (selectedClientId === null) {
-          this.onSelectRequest({id: entitySprite.entity.id});
+          this.localSelection = [entitySprite]
+
+          if (entitySprite.game.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
+            this.localSelection = this.localSelection.concat(entitySprite.getEntitiesAbove());
+          }
+
+          const requestedEntities = _(this.localSelection)
+          .sortBy(x => x.entity.z)
+          .map('entity')
+          .value();
+
+          entitySprite.game.store.dispatch('ENTITY_SELECT_REQUEST', requestedEntities);
         }
       }
     }, this);
@@ -77,6 +85,7 @@ export default class extends Phaser.Sprite {
       entitySprite.dragOffset = null;
       entitySprite.dragStartPos = {x: 0, y: 0};
       entitySprite.draggingObjects = [];
+      entitySprite.localSelection = [];
     }, this);
 
     this.events.onDragStart.add((entitySprite, pointer, x, y) => {
@@ -86,13 +95,19 @@ export default class extends Phaser.Sprite {
         y: entitySprite.entity.pos.y,
       };
 
-      entitySprite.draggingObjects = _(entitySprite.entityList)
-      .values()
-      .filter(x => x.entity.id !== entitySprite.entity.id)
-      .filter(x => x.entity.selectedClientId === entitySprite.game.store.getState().game.player.clientId)
-      .filter(x => !x.input.isDragged)
-      .value();
-
+      if (entitySprite.game.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
+        entitySprite.draggingObjects = entitySprite.getEntitiesAbove();
+      } else {
+        entitySprite.draggingObjects = entitySprite.localSelection;
+        if (entitySprite.draggingObjects.length === 0) {
+          entitySprite.draggingObjects = _(entitySprite.entityList)
+          .values()
+          .filter(x => x.entity.id !== entitySprite.entity.id)
+          .filter(x => x.entity.selectedClientId === entitySprite.game.store.getState().game.player.clientId)
+          .filter(x => !x.input.isDragged)
+          .value();
+        }
+      }
       entitySprite.updateDragPosition(pointer, x, y);
     });
 
@@ -103,6 +118,20 @@ export default class extends Phaser.Sprite {
         entitySprite.updateDragPosition(pointer, x, y);
       }
     }, this);
+  }
+
+  getEntitiesAbove() {
+    let selectedEntities = [];
+    _(this.entityList)
+    .filter(x => x.z > this.z)
+    .sortBy(x => x.z)
+    .filter(x => this.overlap(x))
+    .forEach(entity => {
+      selectedEntities.push(entity);
+      selectedEntities = selectedEntities.concat(entity.getEntitiesAbove());
+    });
+
+    return _.uniqBy(selectedEntities, x => x.entity.id);
   }
 
   updateDragPosition(pointer, x, y) {
