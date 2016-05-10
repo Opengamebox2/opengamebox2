@@ -3,13 +3,15 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.Sprite {
 
-  constructor ({entity, game}) {
+  constructor ({entity, game, entities}) {
     super(game, entity.pos.x, entity.pos.y, 'mushroom');
 
     this.game = game;
     this.anchor.setTo(0.5);
     this.entity = {id: entity.id};
     this.inputEnabled = true;
+
+    this.entityList = entities;
 
     this.pointerDown = null;
     this.tween = null;
@@ -21,10 +23,12 @@ export default class extends Phaser.Sprite {
     // callbacks set by caller
     this.onDeleteRequest = () => {};
     this.onSelectRequest = () => {};
-    this.onMoveRequest = () => {};
 
     this.initEventListeners();
     this.updateEntity();
+
+    this.dragStartPos = {x: 0, y: 0};
+    this.draggingObjects = [];
   }
 
   initEventListeners() {
@@ -49,31 +53,75 @@ export default class extends Phaser.Sprite {
     }, this);
 
     this.events.onDragStop.add(entitySprite => {
-      const x = entitySprite.x;
-      const y = entitySprite.y;
-      this.onMoveRequest({id: entitySprite.entity.id, pos: {x, y}});
+      const dragDistance = {
+        x: entitySprite.x - entitySprite.dragStartPos.x,
+        y: entitySprite.y - entitySprite.dragStartPos.y,
+      };
+
+      const draggedEntities = _(entitySprite.entityList)
+      .values()
+      .sortBy(x => x.entity.depth)
+      .map(entity => {
+        return {
+          id: entity.entity.id,
+          pos: {
+            x: entity.entity.pos.x + dragDistance.x,
+            y: entity.entity.pos.y + dragDistance.y,
+          },
+        };
+      })
+      .value();
+
+      this.game.store.dispatch('ENTITY_MOVE_REQUEST', draggedEntities);
+
       entitySprite.dragOffset = null;
+      entitySprite.dragStartPos = {x: 0, y: 0};
+      entitySprite.draggingObjects = [];
     }, this);
 
     this.events.onDragStart.add((entitySprite, pointer, x, y) => {
       entitySprite.dragOffset = {x: x - entitySprite.x, y: y - entitySprite.y};
-      entitySprite.updateDragPosition(pointer);
+      entitySprite.dragStartPos = {
+        x: entitySprite.entity.pos.x,
+        y: entitySprite.entity.pos.y,
+      };
+
+      entitySprite.draggingObjects = _(entitySprite.entityList)
+      .values()
+      .filter(x => x.entity.id !== entitySprite.entity.id)
+      .filter(x => x.entity.selectedClientId === entitySprite.game.store.getState().game.player.clientId)
+      .filter(x => !x.input.isDragged)
+      .value();
+
+      entitySprite.updateDragPosition(pointer, x, y);
     });
 
     this.events.onDragUpdate.add((entitySprite, pointer, x, y) => {
       if (pointer.button !== 0) {
         entitySprite.input.stopDrag(pointer);
       } else {
-        entitySprite.updateDragPosition(pointer);
+        entitySprite.updateDragPosition(pointer, x, y);
       }
     }, this);
   }
 
-  updateDragPosition(pointer) {
+  updateDragPosition(pointer, x, y) {
     const pos = this.game.input.getLocalPosition(this.parent, pointer);
     const dragOffset = this.dragOffset || {x: 0, y: 0};
     this.x = pos.x + dragOffset.x;
     this.y = pos.y + dragOffset.y;
+
+    const dragDistance = {
+      x: this.x - this.dragStartPos.x,
+      y: this.y - this.dragStartPos.y,
+    };
+
+    this.draggingObjects.forEach(entity => {
+      if (entity.entity.selectedClientId === this.game.store.getState().game.player.clientId) {
+        entity.x = dragDistance.x + entity.entity.pos.x;
+        entity.y = dragDistance.y + entity.entity.pos.y;
+      }
+    });
   }
 
   update() {}
