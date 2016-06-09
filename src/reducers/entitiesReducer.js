@@ -1,6 +1,4 @@
-const assignToEmpty = (oldObject, newObject) => {
-  return Object.assign({}, oldObject, newObject);
-};
+import _ from 'lodash';
 
 function entitiesReducer(state = {}, action) {
   Object.freeze(state);
@@ -11,18 +9,36 @@ function entitiesReducer(state = {}, action) {
     {
       let entities = {};
       action.data.forEach(entity => {
-        entities[entity.id] = assignToEmpty(state[entity.id], entity);
+        entities[entity.id] = _.assign({}, state[entity.id], entity);
       });
-      return assignToEmpty(state, entities);
+      return _.assign({}, state, entities);
     }
 
     case 'ENTITY_DELETE':
     {
-      let entities = assignToEmpty(state, {});
+      let entities = _.assign({}, state, {});
       action.data.forEach(entity => {
         delete entities[entity.id];
       });
       return entities;
+    }
+
+    case 'ENTITY_FREEZE':
+    {
+      let entities = {};
+      action.data.forEach(entityId => {
+        entities[entityId] = _.assign({}, state[entityId], {frozen: true});
+      });
+      return _.assign({}, state, entities);
+    }
+
+    case 'ENTITY_UNFREEZE':
+    {
+      let entities = {};
+      action.data.forEach(entityId => {
+        entities[entityId] = _.assign({}, state[entityId], {frozen: false});
+      });
+      return _.assign({}, state, entities);
     }
 
     default:
